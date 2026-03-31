@@ -50,6 +50,29 @@ class DocumentRegistryRepository(BaseRepository):
             (chunk_count, page_id),
         )
 
+    def update_index_status(
+        self, *, page_id: str, index_status: str, last_index_time: str | None = None
+    ) -> None:
+        """Update the index_status (and optionally last_index_time) for a document."""
+        self.execute(
+            """
+            UPDATE document_registry
+               SET index_status   = ?,
+                   last_index_time = COALESCE(?, last_index_time)
+             WHERE page_id = ?
+            """,
+            (index_status, last_index_time, page_id),
+        )
+
+    def count_by_index_status(self, index_status: str) -> int:
+        row = self.fetch_one(
+            "SELECT COUNT(*) AS cnt FROM document_registry WHERE index_status = ?",
+            (index_status,),
+        )
+        if row is None:
+            return 0
+        return int(row["cnt"])
+
     def upsert(
         self,
         *,

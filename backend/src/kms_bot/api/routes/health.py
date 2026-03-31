@@ -8,6 +8,7 @@ from kms_bot.core.dependencies import get_container, get_settings
 from kms_bot.core.container import ServiceContainer
 from kms_bot.core.settings import ApplicationSettings
 from kms_bot.schemas.health import HealthDependencies, HealthResponse
+from kms_bot.services.search import AzureAISearchService
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -18,7 +19,13 @@ async def get_health(
     container: ServiceContainer = Depends(get_container),
 ) -> HealthResponse:
     sqlite_status = "ok" if container.database.ping() else "error"
-    azure_search_status = "degraded" if settings.search.is_configured else "not_configured"
+
+    if not settings.search.is_configured:
+        azure_search_status = "not_configured"
+    elif isinstance(container.search_service, AzureAISearchService):
+        azure_search_status = "ok" if container.search_service._client.ping() else "error"
+    else:
+        azure_search_status = "degraded"
     azure_openai_status = "degraded" if settings.answer.is_configured else "not_configured"
 
     if sqlite_status == "error":

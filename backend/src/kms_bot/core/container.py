@@ -9,11 +9,13 @@ from kms_bot.services.confluence_client import ConfluenceClient
 from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
 from kms_bot.services.parser import ConfluenceParseService
 from kms_bot.services.chunker import ConfluenceChunkService
+from kms_bot.services.azure_search_client import AzureSearchClient
 from kms_bot.services.placeholders import (
     PlaceholderAnswerService,
     PlaceholderQueryService,
     PlaceholderSearchService,
 )
+from kms_bot.services.search import AzureAISearchService
 from kms_bot.services.sync import ConfluenceSyncService
 
 
@@ -44,7 +46,20 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
     )
     parse_service = ConfluenceParseService(settings)
     chunk_service = ConfluenceChunkService(settings, registry_repository)
-    search_service = PlaceholderSearchService(settings, registry_repository)
+    search_service: SearchService
+    if settings.search.is_configured:
+        azure_client = AzureSearchClient(
+            endpoint=settings.search.endpoint,
+            api_key=settings.search.api_key,
+            index_name=settings.search.index_name,
+        )
+        search_service = AzureAISearchService(
+            settings=settings,
+            azure_client=azure_client,
+            registry_repository=registry_repository,
+        )
+    else:
+        search_service = PlaceholderSearchService(settings, registry_repository)
     answer_service = PlaceholderAnswerService()
     query_service = PlaceholderQueryService(
         settings=settings,
