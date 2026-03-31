@@ -41,13 +41,15 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
     database = SQLiteDatabase(settings)
     registry_repository = DocumentRegistryRepository(database)
     confluence_client = ConfluenceClient(settings.confluence)
+    parse_service = ConfluenceParseService(settings)
+    chunk_service = ConfluenceChunkService(settings, registry_repository)
     sync_service = ConfluenceSyncService(
         settings=settings,
         confluence_client=confluence_client,
         registry_repository=registry_repository,
+        parse_service=parse_service,
+        chunk_service=chunk_service,
     )
-    parse_service = ConfluenceParseService(settings)
-    chunk_service = ConfluenceChunkService(settings, registry_repository)
     search_service: SearchService
     if settings.search.is_configured:
         azure_client = AzureSearchClient(

@@ -14,7 +14,7 @@ from kms_bot.repositories.document_registry import DocumentRegistryRepository
 from kms_bot.schemas.common import OperationAcceptedResponse
 from kms_bot.schemas.sync import SyncStatusResponse
 from kms_bot.services.confluence_client import ConfluenceClient, ConfluencePage
-from kms_bot.services.interfaces import SyncService
+from kms_bot.services.interfaces import ChunkService, ParseService, SyncService
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,11 @@ class _SyncState:
 
 
 class ConfluenceSyncService(SyncService):
-    """Real Confluence sync service that fetches pages and stores raw content."""
+    """Real Confluence sync service that fetches pages and stores raw content.
+
+    After raw content is stored, automatically runs parse_all() and chunk_all()
+    to complete the sync → parse → chunk pipeline before returning.
+    """
 
     def __init__(
         self,
@@ -62,10 +66,14 @@ class ConfluenceSyncService(SyncService):
         settings: ApplicationSettings,
         confluence_client: ConfluenceClient,
         registry_repository: DocumentRegistryRepository,
+        parse_service: ParseService,
+        chunk_service: ChunkService,
     ) -> None:
         self._settings = settings
         self._client = confluence_client
         self._registry = registry_repository
+        self._parse_service = parse_service
+        self._chunk_service = chunk_service
         self._raw_dir: Path = settings.resolve_path(settings.storage.raw_dir)
         self._state = _SyncState(settings.app.pipeline_version)
         self._lock = asyncio.Lock()
@@ -126,6 +134,15 @@ class ConfluenceSyncService(SyncService):
                 for page in pages:
                     self._process_page(page)
                     self._state.processed_pages += 1
+
+                # Pipeline step 2: parse raw → cleaned
+                if self._state.changed_pages > 0:
+                    logger.info("pipeline_parse_start", extra={"job_id": job_id})
+                    await self._parse_service.parse_all()
+
+                    # Pipeline step 3: chunk cleaned → chunk artifacts
+                    logger.info("pipeline_chunk_start", extra={"job_id": job_id})
+                    await self._chunk_service.chunk_all()
 
                 self._state.status = "success"
                 self._state.last_success_at = utcnow()

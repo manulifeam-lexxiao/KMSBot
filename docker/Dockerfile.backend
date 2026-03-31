@@ -1,0 +1,20 @@
+FROM python:3.11-slim AS base
+
+WORKDIR /app
+
+# 安装依赖
+COPY backend/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 复制源代码
+COPY backend/src ./src
+
+# 复制提示词模板
+COPY prompts ./prompts
+
+ENV PYTHONPATH=/app/src
+ENV PYTHONUNBUFFERED=1
+
+EXPOSE 8000
+
+CMD ["uvicorn", "kms_bot.main:app", "--host", "0.0.0.0", "--port", "8000"]
