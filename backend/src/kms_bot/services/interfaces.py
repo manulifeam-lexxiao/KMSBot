@@ -31,7 +31,7 @@ class ParseService(ABC):
 
 class ChunkService(ABC):
     @abstractmethod
-    async def chunk_document(self, document: CleanedDocument) -> list[ChunkRecord]:
+    async def chunk_document(self, document: CleanedDocument, *, url: str) -> list[ChunkRecord]:
         raise NotImplementedError
 
 

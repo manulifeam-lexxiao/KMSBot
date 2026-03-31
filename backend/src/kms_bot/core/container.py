@@ -8,9 +8,9 @@ from kms_bot.repositories.document_registry import DocumentRegistryRepository
 from kms_bot.services.confluence_client import ConfluenceClient
 from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
 from kms_bot.services.parser import ConfluenceParseService
+from kms_bot.services.chunker import ConfluenceChunkService
 from kms_bot.services.placeholders import (
     PlaceholderAnswerService,
-    PlaceholderChunkService,
     PlaceholderQueryService,
     PlaceholderSearchService,
 )
@@ -43,7 +43,7 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
         registry_repository=registry_repository,
     )
     parse_service = ConfluenceParseService(settings)
-    chunk_service = PlaceholderChunkService()
+    chunk_service = ConfluenceChunkService(settings, registry_repository)
     search_service = PlaceholderSearchService(settings, registry_repository)
     answer_service = PlaceholderAnswerService()
     query_service = PlaceholderQueryService(

@@ -38,6 +38,18 @@ class DocumentRegistryRepository(BaseRepository):
             return None
         return row.get("latest")
 
+    def update_chunk_count(self, *, page_id: str, chunk_count: int) -> None:
+        """Set chunk_count and mark the document as stale for re-indexing."""
+        self.execute(
+            """
+            UPDATE document_registry
+               SET chunk_count   = ?,
+                   index_status  = 'stale'
+             WHERE page_id = ?
+            """,
+            (chunk_count, page_id),
+        )
+
     def upsert(
         self,
         *,

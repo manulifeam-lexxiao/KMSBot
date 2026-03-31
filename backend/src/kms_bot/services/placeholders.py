@@ -83,7 +83,7 @@ class PlaceholderParseService(ParseService):
 
 
 class PlaceholderChunkService(ChunkService):
-    async def chunk_document(self, document: CleanedDocument) -> list[ChunkRecord]:
+    async def chunk_document(self, document: CleanedDocument, *, url: str) -> list[ChunkRecord]:
         raise ModuleNotReadyError("chunker")
 
 
