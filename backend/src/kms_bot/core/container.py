@@ -12,9 +12,9 @@ from kms_bot.services.chunker import ConfluenceChunkService
 from kms_bot.services.azure_search_client import AzureSearchClient
 from kms_bot.services.placeholders import (
     PlaceholderAnswerService,
-    PlaceholderQueryService,
     PlaceholderSearchService,
 )
+from kms_bot.services.query import QueryOrchestratorService
 from kms_bot.services.search import AzureAISearchService
 from kms_bot.services.sync import ConfluenceSyncService
 
@@ -61,7 +61,7 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
     else:
         search_service = PlaceholderSearchService(settings, registry_repository)
     answer_service = PlaceholderAnswerService()
-    query_service = PlaceholderQueryService(
+    query_service = QueryOrchestratorService(
         settings=settings,
         search_service=search_service,
         answer_service=answer_service,
