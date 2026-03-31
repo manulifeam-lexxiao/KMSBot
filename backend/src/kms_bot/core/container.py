@@ -7,10 +7,10 @@ from kms_bot.db.sqlite import SQLiteDatabase
 from kms_bot.repositories.document_registry import DocumentRegistryRepository
 from kms_bot.services.confluence_client import ConfluenceClient
 from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
+from kms_bot.services.parser import ConfluenceParseService
 from kms_bot.services.placeholders import (
     PlaceholderAnswerService,
     PlaceholderChunkService,
-    PlaceholderParseService,
     PlaceholderQueryService,
     PlaceholderSearchService,
 )
@@ -42,7 +42,7 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
         confluence_client=confluence_client,
         registry_repository=registry_repository,
     )
-    parse_service = PlaceholderParseService()
+    parse_service = ConfluenceParseService(settings)
     chunk_service = PlaceholderChunkService()
     search_service = PlaceholderSearchService(settings, registry_repository)
     answer_service = PlaceholderAnswerService()
