@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
@@ -75,6 +75,9 @@ ENVIRONMENT_OVERRIDES: tuple[tuple[str, tuple[str, ...], ConfigValueParser], ...
     ("KMSBOT_AZURE_OPENAI_ENDPOINT", ("answer", "endpoint"), str),
     ("KMSBOT_AZURE_OPENAI_API_KEY", ("answer", "api_key"), str),
     ("KMSBOT_AZURE_OPENAI_CHAT_DEPLOYMENT", ("answer", "chat_deployment"), str),
+    ("KMSBOT_ANSWER_PROVIDER", ("answer", "provider"), str),
+    ("KMSBOT_GITHUB_MODELS_API_TOKEN", ("github_models", "api_token"), str),
+    ("KMSBOT_GITHUB_MODELS_MODEL_NAME", ("github_models", "model_name"), str),
     ("KMSBOT_QUERY_TOP_K", ("query", "top_k"), int),
     ("KMSBOT_QUERY_INCLUDE_DEBUG", ("query", "include_debug"), _parse_bool),
     ("KMSBOT_PROMPT_QUERY_ANSWERING", ("prompts", "query_answering"), str),
@@ -141,6 +144,7 @@ class SearchSettings(StrictModel):
 
 
 class AnswerSettings(StrictModel):
+    provider: Literal["azure_openai", "github_models"] = "azure_openai"
     endpoint: str = ""
     api_key: str = ""
     chat_deployment: str = ""
@@ -148,6 +152,15 @@ class AnswerSettings(StrictModel):
     @property
     def is_configured(self) -> bool:
         return bool(self.endpoint and self.api_key and self.chat_deployment)
+
+
+class GithubModelsSettings(StrictModel):
+    api_token: str = ""
+    model_name: str = "gpt-4o"
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.api_token and self.model_name)
 
 
 class QuerySettings(StrictModel):
@@ -171,6 +184,7 @@ class ApplicationSettings(StrictModel):
     confluence: ConfluenceSettings = Field(default_factory=ConfluenceSettings)
     search: SearchSettings = Field(default_factory=SearchSettings)
     answer: AnswerSettings = Field(default_factory=AnswerSettings)
+    github_models: GithubModelsSettings = Field(default_factory=GithubModelsSettings)
     query: QuerySettings = Field(default_factory=QuerySettings)
     prompts: PromptSettings = Field(default_factory=PromptSettings)
 

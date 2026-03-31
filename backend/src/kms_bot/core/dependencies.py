@@ -4,6 +4,7 @@ from fastapi import Depends, Request
 
 from kms_bot.core.container import ServiceContainer
 from kms_bot.core.settings import ApplicationSettings
+from kms_bot.services.answer_router import ProviderAnswerRouter
 from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
 
 
@@ -37,3 +38,7 @@ def get_answer_service(container: ServiceContainer = Depends(get_container)) -> 
 
 def get_query_service(container: ServiceContainer = Depends(get_container)) -> QueryService:
     return container.query_service
+
+
+def get_answer_router(container: ServiceContainer = Depends(get_container)) -> ProviderAnswerRouter:
+    return container.answer_router

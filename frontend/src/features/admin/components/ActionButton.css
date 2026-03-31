@@ -1,33 +1,37 @@
 .action-button-wrapper {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
 .action-button {
-  padding: 6px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  border: 1px solid #0066cc;
-  border-radius: 4px;
-  background: #0066cc;
-  color: #fff;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-body);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-contrast);
   cursor: pointer;
   white-space: nowrap;
+  transition: all var(--transition-fast);
 }
 
 .action-button:hover:not(:disabled) {
-  background: #0052a3;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .action-button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .action-button__feedback {
-  font-size: 12px;
+  font-size: var(--text-xs);
+
 }
 
 .action-button__feedback--ok {

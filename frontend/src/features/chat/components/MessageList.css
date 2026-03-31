@@ -1,10 +1,12 @@
 .message-list {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
 }
 
 .message-list--empty {
@@ -13,28 +15,35 @@
 }
 
 .message-list__placeholder {
-  color: #999;
-  font-size: 15px;
+  color: var(--text-3);
+  font-size: var(--text-base);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
 }
 
 .message-list__bubble {
-  max-width: 80%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 14px;
-  line-height: 1.4;
+  max-width: 78%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  animation: fadeSlideIn 200ms ease forwards;
 }
 
 .message-list__bubble--user {
   align-self: flex-end;
-  background: #dceaff;
-  color: #1a1a1a;
+  background: var(--accent-muted);
+  border: 1px solid rgba(232, 168, 64, 0.2);
+  color: var(--text-1);
+  border-bottom-right-radius: var(--radius-sm);
 }
 
 .message-list__bubble--assistant {
   align-self: flex-start;
-  background: #f4f4f4;
-  color: #1a1a1a;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-1);
+  border-bottom-left-radius: var(--radius-sm);
 }
 
 .message-list__user-text {
@@ -44,16 +53,18 @@
 /* Loading dots animation */
 .message-list__loading {
   display: flex;
-  gap: 4px;
-  padding: 4px 0;
+  gap: var(--space-1);
+  padding: 2px 0;
+  align-items: center;
 }
 
 .message-list__dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #aaa;
+  background: var(--accent);
   animation: dot-pulse 1.2s infinite ease-in-out;
+  opacity: 0.6;
 }
 
 .message-list__dot:nth-child(2) {
@@ -72,7 +83,7 @@
     transform: scale(0.8);
   }
   40% {
-    opacity: 1;
+    opacity: 0.8;
     transform: scale(1);
   }
 }
