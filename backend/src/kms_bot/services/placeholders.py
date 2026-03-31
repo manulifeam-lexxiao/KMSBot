@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import re
-from datetime import datetime, timezone
-
 from kms_bot.core.errors import ModuleNotReadyError
 from kms_bot.core.settings import ApplicationSettings
+from kms_bot.core.utils import make_job_id, utcnow
 from kms_bot.repositories.document_registry import DocumentRegistryRepository
 from kms_bot.schemas.common import JobType, OperationAcceptedResponse
 from kms_bot.schemas.documents import ChunkRecord, CleanedDocument
@@ -20,18 +18,8 @@ from kms_bot.schemas.query import (
 )
 from kms_bot.schemas.sync import SyncStatusResponse
 from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
+from kms_bot.services.query import normalize_query
 
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
-
-
-def _job_id(prefix: str) -> str:
-    return f"{prefix}-{_utcnow().strftime('%Y%m%d%H%M%S')}"
-
-
-def _normalize_query(raw_query: str) -> str:
-    return re.sub(r"\s+", " ", raw_query.strip().lower())
 
 
 class PlaceholderSyncService(SyncService):
@@ -41,14 +29,14 @@ class PlaceholderSyncService(SyncService):
     async def trigger_full_sync(self) -> OperationAcceptedResponse:
         return self._accepted_response(
             job_type="full_sync",
-            job_id=_job_id("sync-full"),
+            job_id=make_job_id("sync-full"),
             message="Full sync request accepted by the baseline placeholder.",
         )
 
     async def trigger_incremental_sync(self) -> OperationAcceptedResponse:
         return self._accepted_response(
             job_type="incremental_sync",
-            job_id=_job_id("sync-incremental"),
+            job_id=make_job_id("sync-incremental"),
             message="Incremental sync request accepted by the baseline placeholder.",
         )
 
@@ -71,7 +59,7 @@ class PlaceholderSyncService(SyncService):
             job_id=job_id,
             job_type=job_type,
             status="accepted",
-            requested_at=_utcnow(),
+            requested_at=utcnow(),
             pipeline_version=self._settings.app.pipeline_version,
             message=message,
         )
@@ -97,10 +85,10 @@ class PlaceholderSearchService(SearchService):
 
     async def rebuild_index(self) -> OperationAcceptedResponse:
         return OperationAcceptedResponse(
-            job_id=_job_id("index-rebuild"),
+            job_id=make_job_id("index-rebuild"),
             job_type="index_rebuild",
             status="accepted",
-            requested_at=_utcnow(),
+            requested_at=utcnow(),
             pipeline_version=self._settings.app.pipeline_version,
             message="Index rebuild request accepted by the baseline placeholder.",
         )
@@ -139,7 +127,7 @@ class PlaceholderQueryService(QueryService):
         self._answer_service = answer_service
 
     async def answer_query(self, request: QueryRequest) -> QueryResponse:
-        normalized_query = _normalize_query(request.query)
+        normalized_query = normalize_query(request.query)
         selected_chunks = await self._search_service.search(query=normalized_query, top_k=request.top_k)
         answer = await self._answer_service.generate_answer(
             AnswerGeneratorInput(

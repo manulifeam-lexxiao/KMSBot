@@ -4,11 +4,12 @@ import asyncio
 import hashlib
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from kms_bot.core.errors import AppError
 from kms_bot.core.settings import ApplicationSettings
+from kms_bot.core.utils import make_job_id, utcnow
 from kms_bot.repositories.document_registry import DocumentRegistryRepository
 from kms_bot.schemas.common import OperationAcceptedResponse
 from kms_bot.schemas.sync import SyncStatusResponse
@@ -16,14 +17,6 @@ from kms_bot.services.confluence_client import ConfluenceClient, ConfluencePage
 from kms_bot.services.interfaces import SyncService
 
 logger = logging.getLogger(__name__)
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
-
-
-def _job_id(prefix: str) -> str:
-    return f"{prefix}-{_utcnow().strftime('%Y%m%d%H%M%S')}"
 
 
 def _compute_hash(content: str) -> str:
@@ -82,14 +75,14 @@ class ConfluenceSyncService(SyncService):
     async def trigger_full_sync(self) -> OperationAcceptedResponse:
         self._assert_configured()
         self._assert_not_running()
-        job_id = _job_id("sync-full")
+        job_id = make_job_id("sync-full")
         asyncio.create_task(self._run_sync(mode="full", job_id=job_id))
         return self._accepted("full_sync", job_id, "Full sync request accepted.")
 
     async def trigger_incremental_sync(self) -> OperationAcceptedResponse:
         self._assert_configured()
         self._assert_not_running()
-        job_id = _job_id("sync-incremental")
+        job_id = make_job_id("sync-incremental")
         asyncio.create_task(self._run_sync(mode="incremental", job_id=job_id))
         return self._accepted("incremental_sync", job_id, "Incremental sync request accepted.")
 
@@ -122,7 +115,7 @@ class ConfluenceSyncService(SyncService):
             self._state.status = "running"
             self._state.mode = mode
             self._state.current_job_id = job_id
-            self._state.last_started_at = _utcnow()
+            self._state.last_started_at = utcnow()
             self._state.processed_pages = 0
             self._state.changed_pages = 0
             self._state.error_message = None
@@ -135,7 +128,7 @@ class ConfluenceSyncService(SyncService):
                     self._state.processed_pages += 1
 
                 self._state.status = "success"
-                self._state.last_success_at = _utcnow()
+                self._state.last_success_at = utcnow()
                 logger.info(
                     "sync_completed",
                     extra={
@@ -150,7 +143,7 @@ class ConfluenceSyncService(SyncService):
                 self._state.error_message = str(exc)
                 logger.exception("sync_failed", extra={"mode": mode, "job_id": job_id})
             finally:
-                self._state.last_finished_at = _utcnow()
+                self._state.last_finished_at = utcnow()
                 self._state.current_job_id = None
 
     async def _fetch_pages(self, mode: str) -> list[ConfluencePage]:
@@ -169,7 +162,7 @@ class ConfluenceSyncService(SyncService):
     def _process_page(self, page: ConfluencePage) -> None:
         try:
             raw_hash = _compute_hash(page.body_html)
-            now_iso = _utcnow().isoformat()
+            now_iso = utcnow().isoformat()
 
             existing = self._registry.get_by_page_id(page.page_id)
             if (
@@ -201,10 +194,10 @@ class ConfluenceSyncService(SyncService):
                 page_id=page.page_id,
                 title=page.title or page.page_id,
                 source_version=page.source_version,
-                last_updated=page.last_updated or _utcnow().isoformat(),
+                last_updated=page.last_updated or utcnow().isoformat(),
                 raw_hash="",
                 pipeline_version=self._settings.app.pipeline_version,
-                last_sync_time=_utcnow().isoformat(),
+                last_sync_time=utcnow().isoformat(),
                 error_message=str(exc),
             )
 
@@ -239,7 +232,7 @@ class ConfluenceSyncService(SyncService):
             job_id=job_id,
             job_type=job_type,
             status="accepted",
-            requested_at=_utcnow(),
+            requested_at=utcnow(),
             pipeline_version=self._settings.app.pipeline_version,
             message=message,
         )

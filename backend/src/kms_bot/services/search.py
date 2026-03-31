@@ -15,11 +15,12 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from kms_bot.core.settings import ApplicationSettings
+from kms_bot.core.utils import make_job_id, utcnow
 from kms_bot.repositories.document_registry import DocumentRegistryRepository
 from kms_bot.schemas.common import OperationAcceptedResponse
 from kms_bot.schemas.documents import ChunkRecord
@@ -32,14 +33,6 @@ logger = logging.getLogger(__name__)
 
 UPLOAD_BATCH_SIZE = 500
 """Maximum documents per Azure upload call."""
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
-
-
-def _job_id(prefix: str) -> str:
-    return f"{prefix}-{_utcnow().strftime('%Y%m%d%H%M%S')}"
 
 
 class _IndexState:
@@ -110,18 +103,18 @@ class AzureAISearchService(SearchService):
                 job_id=self._state.current_job_id or "unknown",
                 job_type="index_rebuild",
                 status="accepted",
-                requested_at=_utcnow(),
+                requested_at=utcnow(),
                 pipeline_version=self._settings.app.pipeline_version,
                 message="Index rebuild is already running.",
             )
 
-        job_id = _job_id("index-rebuild")
+        job_id = make_job_id("index-rebuild")
         asyncio.create_task(self._run_rebuild(job_id))
         return OperationAcceptedResponse(
             job_id=job_id,
             job_type="index_rebuild",
             status="accepted",
-            requested_at=_utcnow(),
+            requested_at=utcnow(),
             pipeline_version=self._settings.app.pipeline_version,
             message="Index rebuild request accepted.",
         )
@@ -137,7 +130,7 @@ class AzureAISearchService(SearchService):
         async with self._lock:
             self._state.status = "running"
             self._state.current_job_id = job_id
-            self._state.last_started_at = _utcnow()
+            self._state.last_started_at = utcnow()
             self._state.error_message = None
 
             try:
@@ -160,7 +153,7 @@ class AzureAISearchService(SearchService):
                         doc_ids.add(c.doc_id)
 
                 # 4. Update registry
-                now = _utcnow().isoformat()
+                now = utcnow().isoformat()
                 for doc_id in doc_ids:
                     self._registry.update_index_status(
                         page_id=doc_id,
@@ -171,7 +164,7 @@ class AzureAISearchService(SearchService):
                 self._state.indexed_documents = len(doc_ids)
                 self._state.indexed_chunks = total_uploaded
                 self._state.status = "success"
-                self._state.last_success_at = _utcnow()
+                self._state.last_success_at = utcnow()
                 logger.info(
                     "index_rebuild_completed",
                     extra={
@@ -189,7 +182,7 @@ class AzureAISearchService(SearchService):
                     exc_info=True,
                 )
             finally:
-                self._state.last_finished_at = _utcnow()
+                self._state.last_finished_at = utcnow()
 
     # ── helpers ───────────────────────────────────────────────
 
@@ -224,7 +217,7 @@ class AzureAISearchService(SearchService):
             "content": chunk.content,
             "tags": chunk.tags,
             "url": str(chunk.url),
-            "last_updated": _utcnow().isoformat(),
+            "last_updated": utcnow().isoformat(),
             "pipeline_version": chunk.pipeline_version,
         }
 

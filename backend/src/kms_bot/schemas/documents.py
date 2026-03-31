@@ -6,8 +6,8 @@ from kms_bot.schemas.common import StrictSchemaModel
 
 
 class CleanedSection(StrictSchemaModel):
-    heading: str = Field(min_length=1)
-    content: str = Field(min_length=1)
+    heading: str
+    content: str
 
 
 class CleanedDocument(StrictSchemaModel):

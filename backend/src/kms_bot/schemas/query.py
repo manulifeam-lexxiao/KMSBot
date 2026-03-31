@@ -31,7 +31,7 @@ class RelatedDocument(StrictSchemaModel):
 
 
 class QueryDebugInfo(StrictSchemaModel):
-    normalized_query: str = Field(min_length=1)
+    normalized_query: str
     selected_chunks: list[SearchResultHit]
 
 
