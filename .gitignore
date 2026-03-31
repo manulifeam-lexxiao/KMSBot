@@ -1,0 +1,39 @@
+# Environment files
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+build/
+.vite/
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Local runtime data
+data/raw/*
+data/cleaned/*
+data/chunks/*
+data/sqlite/*.db
+data/sqlite/*.db-shm
+data/sqlite/*.db-wal
+data/logs/*
+
+# Keep repository placeholders
+!data/README.md

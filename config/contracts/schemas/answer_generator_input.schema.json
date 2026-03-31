@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kmsbot.local/contracts/answer_generator_input.schema.json",
+  "title": "AnswerGeneratorInput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "query",
+    "normalized_query",
+    "prompt_template_path",
+    "selected_chunks",
+    "include_debug"
+  ],
+  "properties": {
+    "query": {
+      "type": "string",
+      "minLength": 1
+    },
+    "normalized_query": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt_template_path": {
+      "type": "string",
+      "pattern": "^prompts/.+\\.md$"
+    },
+    "selected_chunks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "chunk_id",
+          "doc_id",
+          "title",
+          "section",
+          "content",
+          "url",
+          "tags",
+          "pipeline_version",
+          "score"
+        ],
+        "properties": {
+          "chunk_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "doc_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "section": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "pipeline_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "score": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "include_debug": {
+      "type": "boolean"
+    }
+  }
+}

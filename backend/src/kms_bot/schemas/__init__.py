@@ -1,0 +1,1 @@
+"""Pydantic schemas aligned to the frozen KMS Bot contracts."""

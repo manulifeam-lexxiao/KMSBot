@@ -1,0 +1,478 @@
+openapi: 3.1.0
+info:
+  title: KMS Bot POC API
+  version: 1.0.0
+  summary: Frozen API contract for KMS Bot POC / V1
+  description: |
+    This OpenAPI document is the authoritative frontend-to-backend API contract
+    for the KMS Bot POC. Trigger endpoints are asynchronous acknowledgements.
+servers:
+  - url: http://localhost:8000
+tags:
+  - name: health
+  - name: sync
+  - name: index
+  - name: query
+paths:
+  /api/health:
+    get:
+      tags: [health]
+      operationId: getHealth
+      summary: Get backend health status
+      responses:
+        '200':
+          description: Health snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/sync/full:
+    post:
+      tags: [sync]
+      operationId: triggerFullSync
+      summary: Trigger a full Confluence sync
+      responses:
+        '202':
+          description: Full sync accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationAcceptedResponse'
+              examples:
+                fullSyncAccepted:
+                  value:
+                    job_id: sync-full-20260330-001
+                    job_type: full_sync
+                    status: accepted
+                    requested_at: '2026-03-30T10:00:00Z'
+                    pipeline_version: 1
+                    message: Full sync request accepted.
+  /api/sync/incremental:
+    post:
+      tags: [sync]
+      operationId: triggerIncrementalSync
+      summary: Trigger an incremental Confluence sync
+      responses:
+        '202':
+          description: Incremental sync accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationAcceptedResponse'
+              examples:
+                incrementalSyncAccepted:
+                  value:
+                    job_id: sync-incremental-20260330-001
+                    job_type: incremental_sync
+                    status: accepted
+                    requested_at: '2026-03-30T10:05:00Z'
+                    pipeline_version: 1
+                    message: Incremental sync request accepted.
+  /api/sync/status:
+    get:
+      tags: [sync]
+      operationId: getSyncStatus
+      summary: Get the latest sync status snapshot
+      responses:
+        '200':
+          description: Sync status snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncStatusResponse'
+  /api/index/rebuild:
+    post:
+      tags: [index]
+      operationId: triggerIndexRebuild
+      summary: Trigger a full search index rebuild
+      responses:
+        '202':
+          description: Index rebuild accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationAcceptedResponse'
+              examples:
+                indexAccepted:
+                  value:
+                    job_id: index-rebuild-20260330-001
+                    job_type: index_rebuild
+                    status: accepted
+                    requested_at: '2026-03-30T10:10:00Z'
+                    pipeline_version: 1
+                    message: Index rebuild request accepted.
+  /api/index/status:
+    get:
+      tags: [index]
+      operationId: getIndexStatus
+      summary: Get the latest index status snapshot
+      responses:
+        '200':
+          description: Index status snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexStatusResponse'
+  /api/query:
+    post:
+      tags: [query]
+      operationId: submitQuery
+      summary: Submit a question and receive an answer with citations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+            examples:
+              basicQuery:
+                value:
+                  query: How do I reset iPension access?
+                  top_k: 5
+                  include_debug: false
+      responses:
+        '200':
+          description: Query answered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - service
+        - version
+        - timestamp
+        - dependencies
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, error]
+        service:
+          type: string
+          const: kms-bot-backend
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        dependencies:
+          type: object
+          additionalProperties: false
+          required:
+            - sqlite
+            - azure_ai_search
+            - azure_openai
+          properties:
+            sqlite:
+              $ref: '#/components/schemas/DependencyStatus'
+            azure_ai_search:
+              $ref: '#/components/schemas/DependencyStatus'
+            azure_openai:
+              $ref: '#/components/schemas/DependencyStatus'
+      example:
+        status: ok
+        service: kms-bot-backend
+        version: 0.1.0
+        timestamp: '2026-03-30T10:15:00Z'
+        dependencies:
+          sqlite: ok
+          azure_ai_search: not_configured
+          azure_openai: not_configured
+
+    DependencyStatus:
+      type: string
+      enum: [ok, degraded, error, not_configured]
+
+    OperationAcceptedResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - job_id
+        - job_type
+        - status
+        - requested_at
+        - pipeline_version
+        - message
+      properties:
+        job_id:
+          type: string
+          minLength: 1
+        job_type:
+          type: string
+          enum: [full_sync, incremental_sync, index_rebuild]
+        status:
+          type: string
+          const: accepted
+        requested_at:
+          type: string
+          format: date-time
+        pipeline_version:
+          type: integer
+          minimum: 1
+        message:
+          type: string
+
+    SyncStatusResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - mode
+        - current_job_id
+        - pipeline_version
+        - last_started_at
+        - last_finished_at
+        - last_success_at
+        - processed_pages
+        - changed_pages
+        - error_message
+      properties:
+        status:
+          type: string
+          enum: [idle, running, success, error]
+        mode:
+          type: string
+          enum: [none, full, incremental]
+        current_job_id:
+          type: [string, 'null']
+        pipeline_version:
+          type: integer
+          minimum: 1
+        last_started_at:
+          type: [string, 'null']
+          format: date-time
+        last_finished_at:
+          type: [string, 'null']
+          format: date-time
+        last_success_at:
+          type: [string, 'null']
+          format: date-time
+        processed_pages:
+          type: integer
+          minimum: 0
+        changed_pages:
+          type: integer
+          minimum: 0
+        error_message:
+          type: [string, 'null']
+
+    IndexStatusResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - current_job_id
+        - pipeline_version
+        - last_started_at
+        - last_finished_at
+        - last_success_at
+        - indexed_documents
+        - indexed_chunks
+        - error_message
+      properties:
+        status:
+          type: string
+          enum: [idle, running, success, error]
+        current_job_id:
+          type: [string, 'null']
+        pipeline_version:
+          type: integer
+          minimum: 1
+        last_started_at:
+          type: [string, 'null']
+          format: date-time
+        last_finished_at:
+          type: [string, 'null']
+          format: date-time
+        last_success_at:
+          type: [string, 'null']
+          format: date-time
+        indexed_documents:
+          type: integer
+          minimum: 0
+        indexed_chunks:
+          type: integer
+          minimum: 0
+        error_message:
+          type: [string, 'null']
+
+    QueryRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - query
+        - top_k
+        - include_debug
+      properties:
+        query:
+          type: string
+          minLength: 1
+        top_k:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+        include_debug:
+          type: boolean
+          default: false
+
+    QueryResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - answer
+        - sources
+        - related_documents
+        - debug
+      properties:
+        answer:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuerySource'
+        related_documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelatedDocument'
+        debug:
+          $ref: '#/components/schemas/QueryDebugInfo'
+      example:
+        answer: Follow the steps in the cited KMS page to reset your access.
+        sources:
+          - title: How to reset iPension access
+            url: https://example/wiki/spaces/KMS/pages/12345
+            section: Steps
+            doc_id: '12345'
+            chunk_id: 12345#steps#1
+        related_documents:
+          - page_id: '12345'
+            title: How to reset iPension access
+            url: https://example/wiki/spaces/KMS/pages/12345
+        debug:
+          normalized_query: how to reset ipension access
+          selected_chunks:
+            - chunk_id: 12345#steps#1
+              doc_id: '12345'
+              title: How to reset iPension access
+              section: Steps
+              content: Step 1 ... Step 2 ...
+              url: https://example/wiki/spaces/KMS/pages/12345
+              tags: [ipension, access, reset]
+              pipeline_version: 1
+              score: 12.3
+
+    QuerySource:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - url
+        - section
+        - doc_id
+        - chunk_id
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        section:
+          type: string
+        doc_id:
+          type: string
+        chunk_id:
+          type: string
+
+    RelatedDocument:
+      type: object
+      additionalProperties: false
+      required:
+        - page_id
+        - title
+        - url
+      properties:
+        page_id:
+          type: string
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+
+    QueryDebugInfo:
+      type: object
+      additionalProperties: false
+      required:
+        - normalized_query
+        - selected_chunks
+      properties:
+        normalized_query:
+          type: string
+        selected_chunks:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultHit'
+
+    SearchResultHit:
+      type: object
+      additionalProperties: false
+      required:
+        - chunk_id
+        - doc_id
+        - title
+        - section
+        - content
+        - url
+        - tags
+        - pipeline_version
+        - score
+      properties:
+        chunk_id:
+          type: string
+        doc_id:
+          type: string
+        title:
+          type: string
+        section:
+          type: string
+        content:
+          type: string
+        url:
+          type: string
+          format: uri
+        tags:
+          type: array
+          items:
+            type: string
+        pipeline_version:
+          type: integer
+          minimum: 1
+        score:
+          type: number
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - error_code
+        - message
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

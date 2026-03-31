@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kmsbot.local/contracts/search_result_adapter.schema.json",
+  "title": "SearchResultHit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chunk_id",
+    "doc_id",
+    "title",
+    "section",
+    "content",
+    "url",
+    "tags",
+    "pipeline_version",
+    "score"
+  ],
+  "properties": {
+    "chunk_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "doc_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "section": {
+      "type": "string",
+      "minLength": 1
+    },
+    "content": {
+      "type": "string",
+      "minLength": 1
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "pipeline_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "score": {
+      "type": "number"
+    }
+  }
+}

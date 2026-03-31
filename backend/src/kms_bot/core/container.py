@@ -1,0 +1,59 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from kms_bot.core.settings import ApplicationSettings
+from kms_bot.db.sqlite import SQLiteDatabase
+from kms_bot.repositories.document_registry import DocumentRegistryRepository
+from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
+from kms_bot.services.placeholders import (
+    PlaceholderAnswerService,
+    PlaceholderChunkService,
+    PlaceholderParseService,
+    PlaceholderQueryService,
+    PlaceholderSearchService,
+    PlaceholderSyncService,
+)
+
+
+@dataclass(slots=True)
+class ServiceContainer:
+    settings: ApplicationSettings
+    database: SQLiteDatabase
+    registry_repository: DocumentRegistryRepository
+    sync_service: SyncService
+    parse_service: ParseService
+    chunk_service: ChunkService
+    search_service: SearchService
+    answer_service: AnswerService
+    query_service: QueryService
+
+    def close(self) -> None:
+        return None
+
+
+def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
+    database = SQLiteDatabase(settings)
+    registry_repository = DocumentRegistryRepository(database)
+    sync_service = PlaceholderSyncService(settings)
+    parse_service = PlaceholderParseService()
+    chunk_service = PlaceholderChunkService()
+    search_service = PlaceholderSearchService(settings, registry_repository)
+    answer_service = PlaceholderAnswerService()
+    query_service = PlaceholderQueryService(
+        settings=settings,
+        search_service=search_service,
+        answer_service=answer_service,
+    )
+
+    return ServiceContainer(
+        settings=settings,
+        database=database,
+        registry_repository=registry_repository,
+        sync_service=sync_service,
+        parse_service=parse_service,
+        chunk_service=chunk_service,
+        search_service=search_service,
+        answer_service=answer_service,
+        query_service=query_service,
+    )
