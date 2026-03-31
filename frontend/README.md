@@ -1,21 +1,60 @@
-# Frontend Skeleton
+# KMS Bot Frontend
 
-This directory is reserved for the React + TypeScript frontend.
+React + TypeScript chat UI for the KMS Bot POC.
 
-## Canonical Structure
+## Quick Start
+
+```bash
+npm install
+npm run dev          # dev server on http://localhost:5173
+npm run build        # production build → dist/
+```
+
+### Mock mode (no backend required)
+
+Create a `.env` file:
+
+```env
+VITE_MOCK_API=true
+```
+
+Then `npm run dev` serves the UI with deterministic mock responses.
+
+## Structure
 
 ```text
 frontend/
+  index.html
+  vite.config.ts
   src/
-    app/
-    components/
-    features/
-      chat/
-      admin/
-    hooks/
+    main.tsx                       # entry
+    App.tsx                        # root component
+    index.css                      # global reset
+    types/
+      query.ts                     # API contract types
     services/
       api/
-    types/
+        queryApi.ts                # POST /api/query call
+        mock.ts                    # mock response for dev
+    hooks/
+      useQueryChat.ts              # chat state + API hook
+    features/
+      chat/
+        ChatPage.tsx               # page shell
+        ChatPage.css
+        components/
+          MessageList.tsx           # scrollable message list
+          MessageList.css
+          ChatInput.tsx             # text input + send button
+          ChatInput.css
+          AnswerMessage.tsx         # assistant bubble wrapper
+          AnswerMessage.css
+          SourceList.tsx            # citation chips
+          SourceList.css
+          RelatedDocuments.tsx      # related page links
+          RelatedDocuments.css
+          DebugPanel.tsx            # collapsible debug JSON
+          DebugPanel.css
 ```
 
 ## Placement Rules
