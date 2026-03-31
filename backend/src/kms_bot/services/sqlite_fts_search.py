@@ -86,14 +86,19 @@ class _IndexState:
 def _sanitize_fts_query(raw: str) -> str:
     """将用户输入安全地转换为 FTS5 MATCH 表达式。
 
-    FTS5 特殊字符（" * ^ ( ) - + :）会被去除，每个词项用双引号包裹。
+    使用 OR 语义：只要有任一词项命中即返回结果，由 BM25 负责排序。
+    这比 AND 语义有更好的召回率，适合自然语言问答场景。
+
+    FTS5 特殊字符（" * ^ ( ) - + :）会被替换为空格避免语法错误。
     """
     special = set('"*^()-+:')
     cleaned = "".join(c if c not in special else " " for c in raw)
-    terms = [t.strip() for t in cleaned.split() if t.strip()]
+    terms = [t.strip() for t in cleaned.split() if len(t.strip()) >= 2]
     if not terms:
-        return '""'
-    return " ".join(f'"{t}"' for t in terms)
+        # 回退：将整个清理后的字符串作为单一词项
+        fallback = cleaned.strip()
+        return f'"{fallback}"' if fallback else '""'
+    return " OR ".join(f'"{t}"' for t in terms)
 
 
 class SQLiteFTSSearchService(SearchService):
@@ -128,6 +133,7 @@ class SQLiteFTSSearchService(SearchService):
 
     async def search(self, *, query: str, top_k: int) -> list[SearchResultHit]:
         fts_query = _sanitize_fts_query(query)
+        logger.info("fts_search", extra={"fts_query": fts_query, "top_k": top_k})
         try:
             rows = await asyncio.to_thread(
                 self._database.fetch_all, _SEARCH_QUERY, (fts_query, top_k)

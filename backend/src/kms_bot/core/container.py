@@ -94,6 +94,12 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
             endpoint=settings.answer.endpoint,
             api_key=settings.answer.api_key,
             chat_deployment=settings.answer.chat_deployment,
+            ssl_verify=settings.answer.ssl_verify,
+            api_key_header=settings.answer.api_key_header,
+            tenant_id=settings.answer.tenant_id,
+            client_id=settings.answer.client_id,
+            client_secret=settings.answer.client_secret,
+            scope=settings.answer.scope,
         )
         azure_answer = AzureOpenAIAnswerService(settings=settings, openai_client=openai_client)
     else:

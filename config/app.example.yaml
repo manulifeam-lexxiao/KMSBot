@@ -41,9 +41,20 @@ search:
   index_name: kmsbot-chunks
 
 answer:
+  # Provider: "azure_openai" or "github_models"
+  provider: azure_openai
   endpoint: ""
   api_key: ""
+  # Azure 原生端点用 "api-key"；APIM 网关用 "Ocp-Apim-Subscription-Key"
+  api_key_header: "api-key"
   chat_deployment: ""
+  # 内网自签名证书场景（如公司 Azure 网关）设为 false 跳过 SSL 验证
+  ssl_verify: true
+  # Azure AD 客户端凭据（APIM 网关需要 Bearer Token + 订阅密钒双重认证时填写）
+  tenant_id: ""
+  client_id: ""
+  client_secret: ""
+  scope: "https://cognitiveservices.azure.com/.default"
 
 query:
   top_k: 5

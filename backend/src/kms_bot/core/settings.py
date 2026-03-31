@@ -78,6 +78,10 @@ ENVIRONMENT_OVERRIDES: tuple[tuple[str, tuple[str, ...], ConfigValueParser], ...
     ("KMSBOT_AZURE_OPENAI_API_KEY", ("answer", "api_key"), str),
     ("KMSBOT_AZURE_OPENAI_CHAT_DEPLOYMENT", ("answer", "chat_deployment"), str),
     ("KMSBOT_ANSWER_PROVIDER", ("answer", "provider"), str),
+    ("KMSBOT_AZURE_OPENAI_SSL_VERIFY", ("answer", "ssl_verify"), _parse_bool),
+    ("KMSBOT_AZURE_AD_TENANT_ID", ("answer", "tenant_id"), str),
+    ("KMSBOT_AZURE_AD_CLIENT_ID", ("answer", "client_id"), str),
+    ("KMSBOT_AZURE_AD_CLIENT_SECRET", ("answer", "client_secret"), str),
     ("KMSBOT_GITHUB_MODELS_API_TOKEN", ("github_models", "api_token"), str),
     ("KMSBOT_GITHUB_MODELS_MODEL_NAME", ("github_models", "model_name"), str),
     ("KMSBOT_QUERY_TOP_K", ("query", "top_k"), int),
@@ -152,11 +156,24 @@ class AnswerSettings(StrictModel):
     provider: Literal["azure_openai", "github_models"] = "azure_openai"
     endpoint: str = ""
     api_key: str = ""
+    # Azure 原生端点用 "api-key"；APIM 网关用 "Ocp-Apim-Subscription-Key"
+    api_key_header: str = "api-key"
     chat_deployment: str = ""
+    ssl_verify: bool = True
+    # Azure AD 客户端凭据（APIM 网关需要 Bearer Token + 订阅密钒双重认证时填写）
+    tenant_id: str = ""
+    client_id: str = ""
+    client_secret: str = ""
+    scope: str = "https://cognitiveservices.azure.com/.default"
+
+    @property
+    def use_aad_auth(self) -> bool:
+        """True 表示需要先用 client credentials 换 Bearer token。"""
+        return bool(self.tenant_id and self.client_id and self.client_secret)
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.endpoint and self.api_key and self.chat_deployment)
+        return bool(self.endpoint and self.chat_deployment and (self.api_key or self.use_aad_auth))
 
 
 class GithubModelsSettings(StrictModel):
