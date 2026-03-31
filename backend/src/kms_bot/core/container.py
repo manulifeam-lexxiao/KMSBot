@@ -10,6 +10,8 @@ from kms_bot.services.interfaces import AnswerService, ChunkService, ParseServic
 from kms_bot.services.parser import ConfluenceParseService
 from kms_bot.services.chunker import ConfluenceChunkService
 from kms_bot.services.azure_search_client import AzureSearchClient
+from kms_bot.services.answer import AzureOpenAIAnswerService
+from kms_bot.services.openai_client import AzureOpenAIClient
 from kms_bot.services.placeholders import (
     PlaceholderAnswerService,
     PlaceholderSearchService,
@@ -60,7 +62,19 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
         )
     else:
         search_service = PlaceholderSearchService(settings, registry_repository)
-    answer_service = PlaceholderAnswerService()
+    answer_service: AnswerService
+    if settings.answer.is_configured:
+        openai_client = AzureOpenAIClient(
+            endpoint=settings.answer.endpoint,
+            api_key=settings.answer.api_key,
+            chat_deployment=settings.answer.chat_deployment,
+        )
+        answer_service = AzureOpenAIAnswerService(
+            settings=settings,
+            openai_client=openai_client,
+        )
+    else:
+        answer_service = PlaceholderAnswerService()
     query_service = QueryOrchestratorService(
         settings=settings,
         search_service=search_service,
