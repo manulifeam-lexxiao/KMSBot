@@ -13,18 +13,12 @@ const useMock = import.meta.env.VITE_MOCK_API === "true";
 const api = {
   getHealth: useMock ? mockApi.getHealthMock : realApi.getHealth,
   getSyncStatus: useMock ? mockApi.getSyncStatusMock : realApi.getSyncStatus,
-  triggerFullSync: useMock
-    ? mockApi.triggerFullSyncMock
-    : realApi.triggerFullSync,
+  triggerFullSync: useMock ? mockApi.triggerFullSyncMock : realApi.triggerFullSync,
   triggerIncrementalSync: useMock
     ? mockApi.triggerIncrementalSyncMock
     : realApi.triggerIncrementalSync,
-  getIndexStatus: useMock
-    ? mockApi.getIndexStatusMock
-    : realApi.getIndexStatus,
-  triggerIndexRebuild: useMock
-    ? mockApi.triggerIndexRebuildMock
-    : realApi.triggerIndexRebuild,
+  getIndexStatus: useMock ? mockApi.getIndexStatusMock : realApi.getIndexStatus,
+  triggerIndexRebuild: useMock ? mockApi.triggerIndexRebuildMock : realApi.triggerIndexRebuild,
 };
 
 /* ------------------------------------------------------------------ */
@@ -38,10 +32,7 @@ interface PollState<T> {
   refresh: () => void;
 }
 
-function usePoll<T>(
-  fetcher: () => Promise<T>,
-  intervalMs = 10_000,
-): PollState<T> {
+function usePoll<T>(fetcher: () => Promise<T>, intervalMs = 10_000): PollState<T> {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,8 +86,7 @@ function useAction(
   onSuccess?: () => void,
 ): ActionState {
   const [isRunning, setIsRunning] = useState(false);
-  const [lastResult, setLastResult] =
-    useState<OperationAcceptedResponse | null>(null);
+  const [lastResult, setLastResult] = useState<OperationAcceptedResponse | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
 
   const trigger = useCallback(() => {
@@ -136,10 +126,7 @@ export function useAdmin(): UseAdmin {
   const indexStatus = usePoll(api.getIndexStatus, 8_000);
 
   const fullSync = useAction(api.triggerFullSync, syncStatus.refresh);
-  const incrementalSync = useAction(
-    api.triggerIncrementalSync,
-    syncStatus.refresh,
-  );
+  const incrementalSync = useAction(api.triggerIncrementalSync, syncStatus.refresh);
   const indexRebuild = useAction(api.triggerIndexRebuild, indexStatus.refresh);
 
   return {

@@ -14,12 +14,7 @@ export function SourceList({ sources }: SourceListProps) {
       <ul className="source-list__items">
         {sources.map((s) => (
           <li key={s.chunk_id} className="source-list__item">
-            <a
-              href={s.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="source-list__link"
-            >
+            <a href={s.url} target="_blank" rel="noopener noreferrer" className="source-list__link">
               {s.title}
             </a>
             <span className="source-list__section">§ {s.section}</span>

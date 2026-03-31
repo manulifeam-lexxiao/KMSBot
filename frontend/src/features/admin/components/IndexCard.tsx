@@ -16,12 +16,7 @@ function fmtTime(iso: string | null): string {
   return new Date(iso).toLocaleString();
 }
 
-export function IndexCard({
-  data,
-  error,
-  isLoading,
-  indexRebuild,
-}: IndexCardProps) {
+export function IndexCard({ data, error, isLoading, indexRebuild }: IndexCardProps) {
   const isBusy = data?.status === "running" || indexRebuild.isRunning;
 
   return (
@@ -62,9 +57,7 @@ export function IndexCard({
           {data.error_message && (
             <div className="admin-card__row">
               <span className="admin-card__label">Error</span>
-              <span className="admin-card__error-text">
-                {data.error_message}
-              </span>
+              <span className="admin-card__error-text">{data.error_message}</span>
             </div>
           )}
         </div>

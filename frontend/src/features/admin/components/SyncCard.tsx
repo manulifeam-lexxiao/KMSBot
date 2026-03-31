@@ -17,17 +17,8 @@ function fmtTime(iso: string | null): string {
   return new Date(iso).toLocaleString();
 }
 
-export function SyncCard({
-  data,
-  error,
-  isLoading,
-  fullSync,
-  incrementalSync,
-}: SyncCardProps) {
-  const isBusy =
-    data?.status === "running" ||
-    fullSync.isRunning ||
-    incrementalSync.isRunning;
+export function SyncCard({ data, error, isLoading, fullSync, incrementalSync }: SyncCardProps) {
+  const isBusy = data?.status === "running" || fullSync.isRunning || incrementalSync.isRunning;
 
   return (
     <section className="admin-card">
@@ -71,9 +62,7 @@ export function SyncCard({
           {data.error_message && (
             <div className="admin-card__row">
               <span className="admin-card__label">Error</span>
-              <span className="admin-card__error-text">
-                {data.error_message}
-              </span>
+              <span className="admin-card__error-text">{data.error_message}</span>
             </div>
           )}
         </div>

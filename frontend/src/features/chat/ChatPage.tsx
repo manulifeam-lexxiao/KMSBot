@@ -6,8 +6,7 @@ import "./ChatPage.css";
 
 export function ChatPage() {
   const [includeDebug, setIncludeDebug] = useState(false);
-  const { messages, isLoading, sendMessage, clearMessages } =
-    useQueryChat(includeDebug);
+  const { messages, isLoading, sendMessage, clearMessages } = useQueryChat(includeDebug);
 
   return (
     <div className="chat-page">

@@ -42,18 +42,14 @@ export function ProviderSelector() {
             >
               <div className="provider-option__header">
                 <span className="provider-option__name">{meta.label}</span>
-                {isActive && (
-                  <span className="provider-option__badge">Active</span>
-                )}
+                {isActive && <span className="provider-option__badge">Active</span>}
               </div>
               <p className="provider-option__desc">{meta.desc}</p>
             </button>
           );
         })}
       </div>
-      {isSwitching && (
-        <p className="provider-selector__status">Switching provider…</p>
-      )}
+      {isSwitching && <p className="provider-selector__status">Switching provider…</p>}
     </div>
   );
 }

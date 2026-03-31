@@ -29,11 +29,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         disabled={disabled}
         autoFocus
       />
-      <button
-        type="submit"
-        className="chat-input__button"
-        disabled={disabled || !value.trim()}
-      >
+      <button type="submit" className="chat-input__button" disabled={disabled || !value.trim()}>
         {disabled ? "…" : "Send"}
       </button>
     </form>

@@ -28,14 +28,10 @@ export function ActionButton({
         {isRunning ? "Running…" : label}
       </button>
       {lastError && (
-        <span className="action-button__feedback action-button__feedback--error">
-          {lastError}
-        </span>
+        <span className="action-button__feedback action-button__feedback--error">{lastError}</span>
       )}
       {!lastError && lastMessage && (
-        <span className="action-button__feedback action-button__feedback--ok">
-          {lastMessage}
-        </span>
+        <span className="action-button__feedback action-button__feedback--ok">{lastMessage}</span>
       )}
     </div>
   );

@@ -6,14 +6,7 @@ import { ProviderSelector } from "./ProviderSelector";
 import "./AdminPage.css";
 
 export function AdminPage() {
-  const {
-    health,
-    syncStatus,
-    indexStatus,
-    fullSync,
-    incrementalSync,
-    indexRebuild,
-  } = useAdmin();
+  const { health, syncStatus, indexStatus, fullSync, incrementalSync, indexRebuild } = useAdmin();
 
   return (
     <div className="admin-page">
@@ -31,11 +24,7 @@ export function AdminPage() {
           </div>
         </div>
 
-        <HealthCard
-          data={health.data}
-          error={health.error}
-          isLoading={health.isLoading}
-        />
+        <HealthCard data={health.data} error={health.error} isLoading={health.isLoading} />
         <SyncCard
           data={syncStatus.data}
           error={syncStatus.error}

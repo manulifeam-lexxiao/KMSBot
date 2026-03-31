@@ -63,8 +63,7 @@ export function useQueryChat(includeDebug = false): UseQueryChat {
         })
         .catch((err: unknown) => {
           if (controller.signal.aborted) return;
-          const errorMessage =
-            err instanceof Error ? err.message : "Unknown error";
+          const errorMessage = err instanceof Error ? err.message : "Unknown error";
           const errMsg: ChatMessage = {
             id: makeId(),
             role: "assistant",

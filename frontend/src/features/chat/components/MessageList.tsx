@@ -28,18 +28,11 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
   return (
     <div className="message-list">
       {messages.map((msg) => (
-        <div
-          key={msg.id}
-          className={`message-list__bubble message-list__bubble--${msg.role}`}
-        >
+        <div key={msg.id} className={`message-list__bubble message-list__bubble--${msg.role}`}>
           {msg.role === "user" ? (
             <div className="message-list__user-text">{msg.content}</div>
           ) : (
-            <AnswerMessage
-              content={msg.content}
-              response={msg.response}
-              error={msg.error}
-            />
+            <AnswerMessage content={msg.content} response={msg.response} error={msg.error} />
           )}
         </div>
       ))}
