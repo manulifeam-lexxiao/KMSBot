@@ -1,18 +1,18 @@
-# Local Data Layout
+# 本地运行时数据
 
-This directory stores only local runtime artifacts.
+本目录仅存放运行时生成的本地数据文件，**不提交到版本控制**（已在 `.gitignore` 中排除具体内容）。
 
-## Canonical Subdirectories
+## 子目录说明
 
-```text
-data/raw/      raw Confluence payload snapshots
-data/cleaned/  cleaned document JSON files
-data/chunks/   per-document chunk arrays
-data/sqlite/   SQLite database files
-data/logs/     local log files
-```
+| 目录 | 内容 |
+|------|------|
+| `data/raw/` | 从 Confluence 拉取的原始页面快照 |
+| `data/cleaned/` | 经过 HTML 清洗和结构化解析后的文档 JSON |
+| `data/chunks/` | 按文档分块后的 chunk 数组 JSON |
+| `data/sqlite/` | SQLite 数据库文件（`kmsbot.db`）|
+| `data/logs/` | 本地运行日志 |
 
-## File Naming Rules
+## 文件命名规则
 
 - `data/raw/<page_id>.json`
 - `data/cleaned/<doc_id>.json`
@@ -20,8 +20,8 @@ data/logs/     local log files
 - `data/sqlite/kmsbot.db`
 - `data/logs/<service>.log`
 
-## Contract Rules
+## Schema 约束
 
-- `data/cleaned/<doc_id>.json` stores one cleaned document object matching `config/contracts/schemas/cleaned_document.schema.json`.
-- `data/chunks/<doc_id>.json` stores a JSON array; every array item must match `config/contracts/schemas/chunk.schema.json`.
-- SQLite registry authority is defined by `config/contracts/sqlite/001_registry.sql`.
+- `data/cleaned/<doc_id>.json` 的结构须符合 `config/contracts/schemas/cleaned_document.schema.json`。
+- `data/chunks/<doc_id>.json` 是 JSON 数组，每个元素须符合 `config/contracts/schemas/chunk.schema.json`。
+- SQLite 数据库结构由 `config/contracts/sqlite/001_registry.sql` 定义。

@@ -1,81 +1,73 @@
-# KMS Bot Frontend
+# 前端（Frontend）
 
-React + TypeScript chat UI for the KMS Bot POC.
+React 18 + TypeScript 前端应用，提供问答聊天界面与管理后台（同步触发、索引状态、设置管理）。
 
-## Quick Start
+## 快速启动
 
 ```bash
 npm install
-npm run dev          # dev server on http://localhost:5173
-npm run build        # production build → dist/
+npm run dev          # 开发服务器，访问 http://localhost:5173
+npm run build        # 生产构建，输出到 dist/
+npm run test         # 运行单元测试
 ```
 
-### Mock mode (no backend required)
+### 纯前端 Mock 模式（无需后端）
 
-Create a `.env` file:
+创建 `.env` 文件：
 
 ```env
 VITE_MOCK_API=true
 ```
 
-Then `npm run dev` serves the UI with deterministic mock responses.
+然后执行 `npm run dev`，前端将使用本地确定性 Mock 响应，无需启动后端。
 
-## Structure
+## 目录结构
 
 ```text
 frontend/
   index.html
   vite.config.ts
+  vitest.config.ts
   src/
-    main.tsx                       # entry
-    App.tsx                        # root component
-    index.css                      # global reset
+    main.tsx                        # 应用入口
+    App.tsx                         # 根组件与路由
+    index.css                       # 全局样式重置
+    app/                            # 应用引导、全局 Provider
+    components/                     # 跨页面复用组件
     types/
-      query.ts                     # API contract types
+      query.ts                      # 问答 API 契约类型
+      admin.ts                      # 管理后台契约类型
     services/
       api/
-        queryApi.ts                # POST /api/query call
-        mock.ts                    # mock response for dev
+        queryApi.ts                 # POST /api/query
+        syncApi.ts                  # POST /api/sync、/api/index
+        healthApi.ts                # GET /api/health
+        settingsApi.ts              # GET/PUT /api/settings
+        mock.ts                     # 开发用 Mock 响应
     hooks/
-      useQueryChat.ts              # chat state + API hook
+      useQueryChat.ts               # 聊天状态 + API Hook
+      useAdmin.ts                   # 管理后台状态 Hook
+      useProvider.ts                # 提供商选择 Hook
     features/
       chat/
-        ChatPage.tsx               # page shell
-        ChatPage.css
+        ChatPage.tsx                # 聊天主页面
         components/
-          MessageList.tsx           # scrollable message list
-          MessageList.css
-          ChatInput.tsx             # text input + send button
-          ChatInput.css
-          AnswerMessage.tsx         # assistant bubble wrapper
-          AnswerMessage.css
-          SourceList.tsx            # citation chips
-          SourceList.css
-          RelatedDocuments.tsx      # related page links
-          RelatedDocuments.css
-          DebugPanel.tsx            # collapsible debug JSON
-          DebugPanel.css
+          MessageList.tsx           # 消息列表
+          ChatInput.tsx             # 输入框与发送按钮
+          AnswerMessage.tsx         # 助手回答气泡
+          SourceList.tsx            # 引用来源标签
+          RelatedDocuments.tsx      # 相关文档链接
+          DebugPanel.tsx            # 可折叠调试 JSON 面板
+      admin/
+        AdminPage.tsx               # 管理后台主页面
+        ProviderSelector.tsx        # 答案提供商切换
 ```
 
-## Placement Rules
+## 开发规范
 
-- `app/` owns app bootstrap, router, and global providers.
-- `components/` owns reusable UI that is not tied to one screen.
-- `features/chat/` owns chat-only UI and state.
-- `features/admin/` owns sync, index, and health UI.
-- `hooks/` owns reusable frontend hooks.
-- `services/api/` is the only place allowed to call backend HTTP endpoints.
-- `types/` owns shared frontend types derived from the frozen API contract.
-
-## Naming Rules
-
-- components: `PascalCase.tsx`
-- hooks: `useSomething.ts`
-- API clients: `queryApi.ts`, `syncApi.ts`, `healthApi.ts`
-- feature folders: lower case by business capability
-
-## Dependency Rules
-
-- Frontend must not call Confluence, Azure AI Search, or Azure OpenAI directly.
-- Frontend must not store runtime prompt text.
+- `services/api/` 是唯一允许调用后端 HTTP 接口的位置。
+- `types/` 中的类型必须与 `config/contracts/openapi.yaml` 保持一致。
+- 前端不得直接调用 Confluence、Azure AI Search 或 Azure OpenAI。
+- 前端不得存储或硬编码运行时提示词文本。
+- 组件文件：`PascalCase.tsx`；Hook 文件：`useSomething.ts`；API 客户端：`queryApi.ts`。
 - Frontend renders backend response contracts; it does not reconstruct answer strategy locally.
