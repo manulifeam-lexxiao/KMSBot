@@ -5,7 +5,6 @@ from kms_bot.schemas.registry import DocumentRegistryRecord
 
 
 class DocumentRegistryRepository(BaseRepository):
-
     _SELECT_COLUMNS = (
         "page_id, title, source_version, last_updated, raw_hash, chunk_count, "
         "pipeline_version, index_status, last_sync_time, last_index_time, error_message"
@@ -106,7 +105,13 @@ class DocumentRegistryRepository(BaseRepository):
                 error_message    = excluded.error_message
             """,
             (
-                page_id, title, source_version, last_updated, raw_hash,
-                pipeline_version, last_sync_time, error_message,
+                page_id,
+                title,
+                source_version,
+                last_updated,
+                raw_hash,
+                pipeline_version,
+                last_sync_time,
+                error_message,
             ),
         )

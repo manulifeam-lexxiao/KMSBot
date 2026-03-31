@@ -10,11 +10,17 @@ from kms_bot.services.interfaces import SearchService
 router = APIRouter(prefix="/index", tags=["index"])
 
 
-@router.post("/rebuild", response_model=OperationAcceptedResponse, status_code=status.HTTP_202_ACCEPTED)
-async def trigger_index_rebuild(search_service: SearchService = Depends(get_search_service)) -> OperationAcceptedResponse:
+@router.post(
+    "/rebuild", response_model=OperationAcceptedResponse, status_code=status.HTTP_202_ACCEPTED
+)
+async def trigger_index_rebuild(
+    search_service: SearchService = Depends(get_search_service),
+) -> OperationAcceptedResponse:
     return await search_service.rebuild_index()
 
 
 @router.get("/status", response_model=IndexStatusResponse)
-async def get_index_status(search_service: SearchService = Depends(get_search_service)) -> IndexStatusResponse:
+async def get_index_status(
+    search_service: SearchService = Depends(get_search_service),
+) -> IndexStatusResponse:
     return await search_service.get_index_status()

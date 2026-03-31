@@ -59,6 +59,7 @@ function usePoll<T>(fetcher: () => Promise<T>, intervalMs = 10_000): PollState<T
 
   useEffect(() => {
     mountedRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     const id = setInterval(load, intervalMs);
     return () => {

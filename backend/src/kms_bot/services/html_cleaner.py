@@ -150,9 +150,7 @@ def _group_into_sections(blocks: list[tuple[str, str]]) -> list[Section]:
     return sections
 
 
-def _flush_section(
-    sections: list[Section], heading: str, parts: list[str]
-) -> None:
+def _flush_section(sections: list[Section], heading: str, parts: list[str]) -> None:
     if not parts:
         return
     content = "\n\n".join(parts)
@@ -199,8 +197,7 @@ def _render_code_block(element: Tag) -> str:
 
 def _is_confluence_code_macro(element: Tag) -> bool:
     return (
-        element.name == "ac:structured-macro"
-        and (element.get("ac:name") or "").lower() == "code"
+        element.name == "ac:structured-macro" and (element.get("ac:name") or "").lower() == "code"
     )
 
 

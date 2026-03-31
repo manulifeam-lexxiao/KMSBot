@@ -84,7 +84,9 @@ class AzureAISearchService(SearchService):
 
     async def search(self, *, query: str, top_k: int) -> list[SearchResultHit]:
         raw_hits = await asyncio.to_thread(
-            self._client.search, query, top=top_k,
+            self._client.search,
+            query,
+            top=top_k,
         )
         hits: list[SearchResultHit] = []
         for raw in raw_hits:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from kms_bot.db.sqlite import SQLiteDatabase
 
@@ -9,13 +10,17 @@ class BaseRepository:
     def __init__(self, database: SQLiteDatabase) -> None:
         self._database = database
 
-    def fetch_one(self, query: str, parameters: Sequence[Any] | None = None) -> dict[str, Any] | None:
+    def fetch_one(
+        self, query: str, parameters: Sequence[Any] | None = None
+    ) -> dict[str, Any] | None:
         row = self._database.fetch_one(query, parameters)
         if row is None:
             return None
         return dict(row)
 
-    def fetch_all(self, query: str, parameters: Sequence[Any] | None = None) -> list[dict[str, Any]]:
+    def fetch_all(
+        self, query: str, parameters: Sequence[Any] | None = None
+    ) -> list[dict[str, Any]]:
         rows = self._database.fetch_all(query, parameters)
         return [dict(row) for row in rows]
 

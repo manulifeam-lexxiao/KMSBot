@@ -17,9 +17,15 @@ from kms_bot.schemas.query import (
     SearchResultHit,
 )
 from kms_bot.schemas.sync import SyncStatusResponse
-from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
+from kms_bot.services.interfaces import (
+    AnswerService,
+    ChunkService,
+    ParseService,
+    QueryService,
+    SearchService,
+    SyncService,
+)
 from kms_bot.services.query import normalize_query
-
 
 
 class PlaceholderSyncService(SyncService):
@@ -54,7 +60,9 @@ class PlaceholderSyncService(SyncService):
             error_message=None,
         )
 
-    def _accepted_response(self, *, job_type: JobType, job_id: str, message: str) -> OperationAcceptedResponse:
+    def _accepted_response(
+        self, *, job_type: JobType, job_id: str, message: str
+    ) -> OperationAcceptedResponse:
         return OperationAcceptedResponse(
             job_id=job_id,
             job_type=job_type,
@@ -76,7 +84,9 @@ class PlaceholderChunkService(ChunkService):
 
 
 class PlaceholderSearchService(SearchService):
-    def __init__(self, settings: ApplicationSettings, registry_repository: DocumentRegistryRepository) -> None:
+    def __init__(
+        self, settings: ApplicationSettings, registry_repository: DocumentRegistryRepository
+    ) -> None:
         self._settings = settings
         self._registry_repository = registry_repository
 
@@ -128,7 +138,9 @@ class PlaceholderQueryService(QueryService):
 
     async def answer_query(self, request: QueryRequest) -> QueryResponse:
         normalized_query = normalize_query(request.query)
-        selected_chunks = await self._search_service.search(query=normalized_query, top_k=request.top_k)
+        selected_chunks = await self._search_service.search(
+            query=normalized_query, top_k=request.top_k
+        )
         answer = await self._answer_service.generate_answer(
             AnswerGeneratorInput(
                 query=request.query,

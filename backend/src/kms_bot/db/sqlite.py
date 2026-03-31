@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator, Sequence
+from typing import Any
 
 from kms_bot.core.settings import ApplicationSettings
 
@@ -47,7 +48,9 @@ class SQLiteDatabase:
 
     @contextmanager
     def connection(self) -> Iterator[sqlite3.Connection]:
-        database_name = ":memory:" if self.database_path == Path(":memory:") else str(self.database_path)
+        database_name = (
+            ":memory:" if self.database_path == Path(":memory:") else str(self.database_path)
+        )
         connection = sqlite3.connect(database_name, check_same_thread=False)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON;")

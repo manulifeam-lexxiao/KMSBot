@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
 
-from kms_bot.core.dependencies import get_container, get_settings
 from kms_bot.core.container import ServiceContainer
+from kms_bot.core.dependencies import get_container, get_settings
 from kms_bot.core.settings import ApplicationSettings
 from kms_bot.schemas.health import HealthDependencies, HealthResponse
 from kms_bot.services.search import AzureAISearchService

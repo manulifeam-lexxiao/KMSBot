@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from azure.core.credentials import AzureKeyCredential
-from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
+from azure.core.exceptions import ResourceNotFoundError
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
@@ -181,8 +181,14 @@ class AzureSearchClient:
         """Execute a BM25 keyword search and return raw result dicts."""
         if select is None:
             select = [
-                "chunk_id", "doc_id", "title", "section",
-                "content", "url", "tags", "pipeline_version",
+                "chunk_id",
+                "doc_id",
+                "title",
+                "section",
+                "content",
+                "url",
+                "tags",
+                "pipeline_version",
             ]
         results = self._search_client.search(
             search_text=query,

@@ -5,7 +5,14 @@ from fastapi import Depends, Request
 from kms_bot.core.container import ServiceContainer
 from kms_bot.core.settings import ApplicationSettings
 from kms_bot.services.answer_router import ProviderAnswerRouter
-from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
+from kms_bot.services.interfaces import (
+    AnswerService,
+    ChunkService,
+    ParseService,
+    QueryService,
+    SearchService,
+    SyncService,
+)
 
 
 def get_settings(request: Request) -> ApplicationSettings:

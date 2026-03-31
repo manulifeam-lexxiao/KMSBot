@@ -104,7 +104,7 @@ class ConfluenceSyncService(SyncService):
             raise AppError(
                 error_code="confluence_not_configured",
                 message="Confluence connection settings are incomplete. "
-                        "Set base_url, space_key, username, and api_token.",
+                "Set base_url, space_key, username, and api_token.",
                 status_code=400,
             )
 

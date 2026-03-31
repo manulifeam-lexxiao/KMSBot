@@ -78,10 +78,14 @@ def register_exception_handlers(app: FastAPI) -> None:
             request_id=request_id,
             details=exc.details,
         )
-        return JSONResponse(status_code=exc.status_code, content=payload.model_dump(exclude_none=True))
+        return JSONResponse(
+            status_code=exc.status_code, content=payload.model_dump(exclude_none=True)
+        )
 
     @app.exception_handler(RequestValidationError)
-    async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+    async def handle_validation_error(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
         request_id = _request_id_from(request)
         logger.warning(
             "request_validation_error",
@@ -93,7 +97,10 @@ def register_exception_handlers(app: FastAPI) -> None:
             request_id=request_id,
             details={"errors": exc.errors()},
         )
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=payload.model_dump(exclude_none=True))
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=payload.model_dump(exclude_none=True),
+        )
 
     @app.exception_handler(HTTPException)
     async def handle_http_exception(request: Request, exc: HTTPException) -> JSONResponse:
@@ -101,14 +108,20 @@ def register_exception_handlers(app: FastAPI) -> None:
         detail = exc.detail if isinstance(exc.detail, str) else "Request failed."
         logger.warning(
             "http_exception",
-            extra={"request_id": request_id, "path": request.url.path, "status_code": exc.status_code},
+            extra={
+                "request_id": request_id,
+                "path": request.url.path,
+                "status_code": exc.status_code,
+            },
         )
         payload = _response_payload(
             error_code="http_error",
             message=detail,
             request_id=request_id,
         )
-        return JSONResponse(status_code=exc.status_code, content=payload.model_dump(exclude_none=True))
+        return JSONResponse(
+            status_code=exc.status_code, content=payload.model_dump(exclude_none=True)
+        )
 
     @app.exception_handler(Exception)
     async def handle_unexpected_exception(request: Request, exc: Exception) -> JSONResponse:
@@ -122,4 +135,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             message="An unexpected server error occurred.",
             request_id=request_id,
         )
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=payload.model_dump(exclude_none=True))
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=payload.model_dump(exclude_none=True),
+        )

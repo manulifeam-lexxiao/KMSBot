@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
@@ -189,9 +190,11 @@ class ApplicationSettings(StrictModel):
     prompts: PromptSettings = Field(default_factory=PromptSettings)
 
     _repo_root: Path = PrivateAttr(default_factory=_repository_root)
-    _config_file_path: Path = PrivateAttr(default_factory=lambda: _repository_root() / "config/app.example.yaml")
+    _config_file_path: Path = PrivateAttr(
+        default_factory=lambda: _repository_root() / "config/app.example.yaml"
+    )
 
-    def bind_runtime_paths(self, repo_root: Path, config_file_path: Path) -> "ApplicationSettings":
+    def bind_runtime_paths(self, repo_root: Path, config_file_path: Path) -> ApplicationSettings:
         self._repo_root = repo_root
         self._config_file_path = config_file_path
         return self

@@ -28,22 +28,16 @@ class ConfluenceParseService(ParseService):
 
     # ── ParseService interface ────────────────────────────────
 
-    async def parse_document(
-        self, *, doc_id: str, title: str, raw_content: str
-    ) -> CleanedDocument:
+    async def parse_document(self, *, doc_id: str, title: str, raw_content: str) -> CleanedDocument:
         """Parse a single document from raw HTML content."""
         sections, plain_text = clean_html(raw_content)
 
-        cleaned_sections = [
-            CleanedSection(heading=s.heading, content=s.content) for s in sections
-        ]
+        cleaned_sections = [CleanedSection(heading=s.heading, content=s.content) for s in sections]
 
         # Guarantee at least one section and non-empty plain_text
         if not cleaned_sections:
             cleaned_sections = [
-                CleanedSection(
-                    heading="Content", content=plain_text or "(empty page)"
-                )
+                CleanedSection(heading="Content", content=plain_text or "(empty page)")
             ]
 
         if not plain_text:
@@ -69,9 +63,7 @@ class ConfluenceParseService(ParseService):
         meta_files = sorted(self._raw_dir.glob("*.meta.json"))
 
         if not meta_files:
-            logger.info(
-                "no_raw_artifacts_found", extra={"raw_dir": str(self._raw_dir)}
-            )
+            logger.info("no_raw_artifacts_found", extra={"raw_dir": str(self._raw_dir)})
             return results
 
         for meta_path in meta_files:
@@ -103,9 +95,7 @@ class ConfluenceParseService(ParseService):
         html_path = meta_path.parent / f"{page_id}.html"
         raw_html = html_path.read_text(encoding="utf-8")
 
-        return await self.parse_document(
-            doc_id=page_id, title=title, raw_content=raw_html
-        )
+        return await self.parse_document(doc_id=page_id, title=title, raw_content=raw_html)
 
     def _persist_cleaned(self, document: CleanedDocument) -> None:
         """Write cleaned document JSON to the cleaned directory."""

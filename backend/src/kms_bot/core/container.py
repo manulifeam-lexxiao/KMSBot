@@ -5,15 +5,22 @@ from dataclasses import dataclass
 from kms_bot.core.settings import ApplicationSettings
 from kms_bot.db.sqlite import SQLiteDatabase
 from kms_bot.repositories.document_registry import DocumentRegistryRepository
-from kms_bot.services.confluence_client import ConfluenceClient
-from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
-from kms_bot.services.parser import ConfluenceParseService
-from kms_bot.services.chunker import ConfluenceChunkService
-from kms_bot.services.azure_search_client import AzureSearchClient
 from kms_bot.services.answer import AzureOpenAIAnswerService, GithubModelsAnswerService
 from kms_bot.services.answer_router import ProviderAnswerRouter
-from kms_bot.services.openai_client import AzureOpenAIClient
+from kms_bot.services.azure_search_client import AzureSearchClient
+from kms_bot.services.chunker import ConfluenceChunkService
+from kms_bot.services.confluence_client import ConfluenceClient
 from kms_bot.services.github_models_client import GithubModelsClient
+from kms_bot.services.interfaces import (
+    AnswerService,
+    ChunkService,
+    ParseService,
+    QueryService,
+    SearchService,
+    SyncService,
+)
+from kms_bot.services.openai_client import AzureOpenAIClient
+from kms_bot.services.parser import ConfluenceParseService
 from kms_bot.services.placeholders import (
     PlaceholderAnswerService,
     PlaceholderSearchService,

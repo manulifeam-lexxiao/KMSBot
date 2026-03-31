@@ -96,11 +96,7 @@ class ConfluenceClient:
         pages: list[ConfluencePage] = []
         start = 0
         limit = self._settings.page_limit
-        cql = (
-            f'space="{self._settings.space_key}" '
-            f'and type=page '
-            f'and lastModified>="{since_iso}"'
-        )
+        cql = f'space="{self._settings.space_key}" and type=page and lastModified>="{since_iso}"'
 
         async with httpx.AsyncClient(auth=self._build_auth(), timeout=60.0) as client:
             while True:
@@ -110,7 +106,9 @@ class ConfluenceClient:
                     "limit": str(limit),
                     "start": str(start),
                 }
-                logger.debug("confluence_fetch_incremental", extra={"start": start, "since": since_iso})
+                logger.debug(
+                    "confluence_fetch_incremental", extra={"start": start, "since": since_iso}
+                )
                 resp = await client.get(f"{self._base_api}/content/search", params=params)
                 resp.raise_for_status()
                 data = resp.json()
@@ -123,5 +121,7 @@ class ConfluenceClient:
                 else:
                     break
 
-        logger.info("confluence_fetched_incremental", extra={"count": len(pages), "since": since_iso})
+        logger.info(
+            "confluence_fetched_incremental", extra={"count": len(pages), "since": since_iso}
+        )
         return pages

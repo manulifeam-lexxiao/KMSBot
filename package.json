@@ -5,10 +5,11 @@
     "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,yellow\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "uvicorn kms_bot.main:app --reload --host 127.0.0.1 --port 8000 --app-dir backend/src",
     "dev:frontend": "cd frontend && npm run dev",
-    "lint": "cd frontend && npm run lint",
-    "format": "cd frontend && npm run format",
-    "format:check": "cd frontend && npm run format:check",
-    "test": "cd frontend && npm run test",
+    "build": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,yellow\" \".venv\\\\Scripts\\\\python.exe -m ruff check backend/src\" \"npm run build --prefix frontend\"",
+    "lint": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,yellow\" \".venv\\\\Scripts\\\\python.exe -m ruff check backend/src\" \"npm run lint --prefix frontend\"",
+    "format": ".venv\\Scripts\\python.exe -m ruff format backend/src && cd frontend && npm run format",
+    "format:check": ".venv\\Scripts\\python.exe -m ruff format --check backend/src && cd frontend && npm run format:check",
+    "test": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,yellow\" \".venv\\\\Scripts\\\\python.exe -m pytest backend/tests -q\" \"npm run test --prefix frontend\"",
     "test:watch": "cd frontend && npm run test:watch"
   },
   "devDependencies": {

@@ -19,12 +19,62 @@ MAX_CHUNK_CHARS = 1500
 
 _STOP_WORDS: frozenset[str] = frozenset(
     {
-        "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
-        "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
-        "being", "have", "has", "had", "do", "does", "did", "will", "would",
-        "could", "should", "may", "might", "can", "shall", "this", "that",
-        "these", "those", "it", "its", "how", "what", "when", "where", "who",
-        "which", "not", "no", "if", "then", "so", "as", "up", "about",
+        "a",
+        "an",
+        "the",
+        "and",
+        "or",
+        "but",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "of",
+        "with",
+        "by",
+        "from",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "can",
+        "shall",
+        "this",
+        "that",
+        "these",
+        "those",
+        "it",
+        "its",
+        "how",
+        "what",
+        "when",
+        "where",
+        "who",
+        "which",
+        "not",
+        "no",
+        "if",
+        "then",
+        "so",
+        "as",
+        "up",
+        "about",
     }
 )
 
@@ -65,9 +115,7 @@ def _hard_split(content: str, *, max_size: int) -> list[str]:
     return chunks
 
 
-def _greedy_merge(
-    parts: list[str], *, max_size: int, separator: str
-) -> list[str]:
+def _greedy_merge(parts: list[str], *, max_size: int, separator: str) -> list[str]:
     """Greedily merge *parts* into chunks that stay under *max_size*."""
     chunks: list[str] = []
     current = ""
@@ -177,9 +225,7 @@ class ConfluenceChunkService(ChunkService):
 
     # ── ChunkService interface ────────────────────────────────
 
-    async def chunk_document(
-        self, document: CleanedDocument, *, url: str
-    ) -> list[ChunkRecord]:
+    async def chunk_document(self, document: CleanedDocument, *, url: str) -> list[ChunkRecord]:
         """Chunk a single cleaned document into ``ChunkRecord`` instances."""
         chunks: list[ChunkRecord] = []
         for section in document.sections:
@@ -214,9 +260,7 @@ class ConfluenceChunkService(ChunkService):
 
         for cleaned_path in cleaned_files:
             try:
-                doc = CleanedDocument.model_validate_json(
-                    cleaned_path.read_text(encoding="utf-8")
-                )
+                doc = CleanedDocument.model_validate_json(cleaned_path.read_text(encoding="utf-8"))
                 url = self._resolve_url(doc.doc_id)
                 chunks = await self.chunk_document(doc, url=url)
                 self._persist_chunks(doc.doc_id, chunks)
@@ -256,12 +300,8 @@ class ConfluenceChunkService(ChunkService):
         self._chunks_dir.mkdir(parents=True, exist_ok=True)
         output_path = self._chunks_dir / f"{doc_id}.chunks.json"
         data = [chunk.model_dump(mode="json") for chunk in chunks]
-        output_path.write_text(
-            json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
+        output_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
     def _update_registry(self, doc_id: str, chunk_count: int) -> None:
         """Persist chunk_count into the document registry."""
-        self._registry.update_chunk_count(
-            page_id=doc_id, chunk_count=chunk_count
-        )
+        self._registry.update_chunk_count(page_id=doc_id, chunk_count=chunk_count)

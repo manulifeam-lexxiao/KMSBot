@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from kms_bot.schemas.documents import ChunkRecord, CleanedDocument
 from kms_bot.schemas.common import OperationAcceptedResponse
+from kms_bot.schemas.documents import ChunkRecord, CleanedDocument
 from kms_bot.schemas.index import IndexStatusResponse
 from kms_bot.schemas.query import AnswerGeneratorInput, QueryRequest, QueryResponse, SearchResultHit
 from kms_bot.schemas.sync import SyncStatusResponse

@@ -20,9 +20,9 @@ from pathlib import Path
 
 from kms_bot.core.settings import ApplicationSettings
 from kms_bot.schemas.query import AnswerGeneratorInput
+from kms_bot.services.github_models_client import GithubModelsClient
 from kms_bot.services.interfaces import AnswerService
 from kms_bot.services.openai_client import AzureOpenAIClient, ChatMessage
-from kms_bot.services.github_models_client import GithubModelsClient
 
 logger = logging.getLogger(__name__)
 
