@@ -29,6 +29,7 @@ confluence:
   space_key: KMS
   username: ""
   api_token: ""
+  page_limit: 25
 
 search:
   endpoint: ""

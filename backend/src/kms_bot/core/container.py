@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from kms_bot.core.settings import ApplicationSettings
 from kms_bot.db.sqlite import SQLiteDatabase
 from kms_bot.repositories.document_registry import DocumentRegistryRepository
+from kms_bot.services.confluence_client import ConfluenceClient
 from kms_bot.services.interfaces import AnswerService, ChunkService, ParseService, QueryService, SearchService, SyncService
 from kms_bot.services.placeholders import (
     PlaceholderAnswerService,
@@ -12,8 +13,8 @@ from kms_bot.services.placeholders import (
     PlaceholderParseService,
     PlaceholderQueryService,
     PlaceholderSearchService,
-    PlaceholderSyncService,
 )
+from kms_bot.services.sync import ConfluenceSyncService
 
 
 @dataclass(slots=True)
@@ -35,7 +36,12 @@ class ServiceContainer:
 def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
     database = SQLiteDatabase(settings)
     registry_repository = DocumentRegistryRepository(database)
-    sync_service = PlaceholderSyncService(settings)
+    confluence_client = ConfluenceClient(settings.confluence)
+    sync_service = ConfluenceSyncService(
+        settings=settings,
+        confluence_client=confluence_client,
+        registry_repository=registry_repository,
+    )
     parse_service = PlaceholderParseService()
     chunk_service = PlaceholderChunkService()
     search_service = PlaceholderSearchService(settings, registry_repository)

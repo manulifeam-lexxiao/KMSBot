@@ -123,6 +123,11 @@ class ConfluenceSettings(StrictModel):
     space_key: str = ""
     username: str = ""
     api_token: str = ""
+    page_limit: int = Field(default=25, ge=1, le=100)
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.base_url and self.space_key and self.username and self.api_token)
 
 
 class SearchSettings(StrictModel):
