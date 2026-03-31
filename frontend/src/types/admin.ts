@@ -11,6 +11,7 @@ export interface HealthResponse {
     sqlite: DependencyStatus;
     azure_ai_search: DependencyStatus;
     azure_openai: DependencyStatus;
+    search_backend?: string;
   };
 }
 

@@ -32,6 +32,10 @@ confluence:
   page_limit: 25
 
 search:
+  # provider: "azure_ai_search" | "sqlite_fts5"
+  # sqlite_fts5 - 零依赖本地全文搜索，无需任何云服务，适合开发/测试
+  # azure_ai_search - 需要填写下方 endpoint / api_key
+  provider: sqlite_fts5
   endpoint: ""
   api_key: ""
   index_name: kmsbot-chunks

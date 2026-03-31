@@ -13,6 +13,7 @@ class HealthDependencies(StrictSchemaModel):
     sqlite: DependencyStatus
     azure_ai_search: DependencyStatus
     azure_openai: DependencyStatus
+    search_backend: str = "azure_ai_search"
 
 
 class HealthResponse(StrictSchemaModel):

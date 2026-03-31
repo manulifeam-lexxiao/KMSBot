@@ -33,7 +33,11 @@ export function HealthCard({ data, error, isLoading }: HealthCardProps) {
             <StatusBadge status={data.dependencies.sqlite} />
           </div>
           <div className="admin-card__row">
-            <span className="admin-card__label">Azure AI Search</span>
+            <span className="admin-card__label">
+              {data.dependencies.search_backend === "sqlite_fts5"
+                ? "SQLite FTS5"
+                : "Azure AI Search"}
+            </span>
             <StatusBadge status={data.dependencies.azure_ai_search} />
           </div>
           <div className="admin-card__row">

@@ -20,8 +20,9 @@ export async function getHealthMock(): Promise<HealthResponse> {
     timestamp: new Date().toISOString(),
     dependencies: {
       sqlite: "ok",
-      azure_ai_search: "not_configured",
+      azure_ai_search: "ok",
       azure_openai: "not_configured",
+      search_backend: "sqlite_fts5",
     },
   };
 }

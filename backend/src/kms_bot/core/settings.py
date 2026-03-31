@@ -70,6 +70,7 @@ ENVIRONMENT_OVERRIDES: tuple[tuple[str, tuple[str, ...], ConfigValueParser], ...
     ("KMSBOT_CONFLUENCE_SPACE_KEY", ("confluence", "space_key"), str),
     ("KMSBOT_CONFLUENCE_USERNAME", ("confluence", "username"), str),
     ("KMSBOT_CONFLUENCE_API_TOKEN", ("confluence", "api_token"), str),
+    ("KMSBOT_SEARCH_PROVIDER", ("search", "provider"), str),
     ("KMSBOT_AZURE_SEARCH_ENDPOINT", ("search", "endpoint"), str),
     ("KMSBOT_AZURE_SEARCH_KEY", ("search", "api_key"), str),
     ("KMSBOT_AZURE_SEARCH_INDEX_NAME", ("search", "index_name"), str),
@@ -135,12 +136,15 @@ class ConfluenceSettings(StrictModel):
 
 
 class SearchSettings(StrictModel):
+    provider: Literal["azure_ai_search", "sqlite_fts5"] = "azure_ai_search"
     endpoint: str = ""
     api_key: str = ""
     index_name: str = "kmsbot-chunks"
 
     @property
     def is_configured(self) -> bool:
+        if self.provider == "sqlite_fts5":
+            return True
         return bool(self.endpoint and self.api_key and self.index_name)
 
 
@@ -224,7 +228,15 @@ class ApplicationSettings(StrictModel):
 
 def load_settings(config_file: str | None = None) -> ApplicationSettings:
     repo_root = _repository_root()
-    raw_config_path = config_file or os.getenv("KMSBOT_CONFIG_FILE", "config/app.example.yaml")
+    env_path = os.getenv("KMSBOT_CONFIG_FILE")
+    if config_file:
+        raw_config_path = config_file
+    elif env_path:
+        raw_config_path = env_path
+    elif (repo_root / "config/app.yaml").exists():
+        raw_config_path = "config/app.yaml"
+    else:
+        raw_config_path = "config/app.example.yaml"
     config_file_path = _resolve_path(repo_root, raw_config_path)
 
     raw_settings = _read_yaml_config(config_file_path)

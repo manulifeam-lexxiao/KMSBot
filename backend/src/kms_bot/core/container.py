@@ -27,6 +27,7 @@ from kms_bot.services.placeholders import (
 )
 from kms_bot.services.query import QueryOrchestratorService
 from kms_bot.services.search import AzureAISearchService
+from kms_bot.services.sqlite_fts_search import SQLiteFTSSearchService
 from kms_bot.services.sync import ConfluenceSyncService
 
 
@@ -42,6 +43,11 @@ class ServiceContainer:
     answer_service: AnswerService
     answer_router: ProviderAnswerRouter
     query_service: QueryService
+
+    def post_initialize(self) -> None:
+        """在 database.initialize() 之后调用，完成需要 DB 存在的服务初始化。"""
+        if isinstance(self.search_service, SQLiteFTSSearchService):
+            self.search_service.initialize_table()
 
     def close(self) -> None:
         return None
@@ -61,7 +67,13 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
         chunk_service=chunk_service,
     )
     search_service: SearchService
-    if settings.search.is_configured:
+    if settings.search.provider == "sqlite_fts5":
+        search_service = SQLiteFTSSearchService(
+            settings=settings,
+            database=database,
+            registry_repository=registry_repository,
+        )
+    elif settings.search.is_configured:
         azure_client = AzureSearchClient(
             endpoint=settings.search.endpoint,
             api_key=settings.search.api_key,

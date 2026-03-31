@@ -22,6 +22,7 @@ def create_app(settings: ApplicationSettings | None = None) -> FastAPI:
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         container = build_service_container(app_settings)
         container.database.initialize()
+        container.post_initialize()
         application.state.container = container
         logger.info(
             "application_started",
