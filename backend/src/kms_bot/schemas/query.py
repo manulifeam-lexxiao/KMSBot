@@ -45,6 +45,7 @@ class QueryResponse(StrictSchemaModel):
 class AnswerGeneratorInput(StrictSchemaModel):
     query: str = Field(min_length=1)
     normalized_query: str = Field(min_length=1)
-    prompt_template_path: str = Field(pattern=r"^prompts/.+\\.md$")
+    prompt_template_path: str = Field(pattern=r"^prompts/.+\.md$")
     selected_chunks: list[SearchResultHit]
+    context_text: str = ""
     include_debug: bool

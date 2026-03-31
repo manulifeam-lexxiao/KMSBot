@@ -1,0 +1,18 @@
+.answer-message {
+  display: flex;
+  flex-direction: column;
+}
+
+.answer-message__text {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.answer-message__error {
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #a94442;
+  background: #f8d7da;
+  border-radius: 4px;
+}

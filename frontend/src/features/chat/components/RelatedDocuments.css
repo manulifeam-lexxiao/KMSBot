@@ -1,0 +1,32 @@
+.related-docs {
+  margin-top: 8px;
+}
+
+.related-docs__title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.related-docs__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.related-docs__item {
+  font-size: 13px;
+}
+
+.related-docs__link {
+  color: #0078d4;
+  text-decoration: none;
+}
+
+.related-docs__link:hover {
+  text-decoration: underline;
+}

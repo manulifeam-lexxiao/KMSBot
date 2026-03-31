@@ -123,6 +123,11 @@ class ConfluenceSettings(StrictModel):
     space_key: str = ""
     username: str = ""
     api_token: str = ""
+    page_limit: int = Field(default=25, ge=1, le=100)
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.base_url and self.space_key and self.username and self.api_token)
 
 
 class SearchSettings(StrictModel):
@@ -148,6 +153,8 @@ class AnswerSettings(StrictModel):
 class QuerySettings(StrictModel):
     top_k: int = Field(default=5, ge=1, le=10)
     include_debug: bool = False
+    max_chunks_per_doc: int = Field(default=3, ge=1, le=10)
+    similarity_threshold: float = Field(default=0.85, ge=0.0, le=1.0)
 
 
 class PromptSettings(StrictModel):

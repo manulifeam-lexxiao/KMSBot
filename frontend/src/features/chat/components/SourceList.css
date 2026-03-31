@@ -1,0 +1,42 @@
+.source-list {
+  margin-top: 8px;
+}
+
+.source-list__title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.source-list__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.source-list__item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #f0f6ff;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.source-list__link {
+  color: #0078d4;
+  text-decoration: none;
+}
+
+.source-list__link:hover {
+  text-decoration: underline;
+}
+
+.source-list__section {
+  color: #888;
+}

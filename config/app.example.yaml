@@ -29,6 +29,7 @@ confluence:
   space_key: KMS
   username: ""
   api_token: ""
+  page_limit: 25
 
 search:
   endpoint: ""
@@ -43,6 +44,8 @@ answer:
 query:
   top_k: 5
   include_debug: false
+  max_chunks_per_doc: 3
+  similarity_threshold: 0.85
 
 prompts:
   query_answering: prompts/query_answering/default.md

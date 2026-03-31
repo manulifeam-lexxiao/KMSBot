@@ -1,0 +1,29 @@
+.debug-panel {
+  margin-top: 8px;
+}
+
+.debug-panel__toggle {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+
+.debug-panel__toggle:hover {
+  color: #555;
+}
+
+.debug-panel__content {
+  margin: 6px 0 0;
+  padding: 8px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: 4px;
+  font-size: 11px;
+  max-height: 300px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

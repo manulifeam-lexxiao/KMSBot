@@ -1,0 +1,39 @@
+.action-button-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #0066cc;
+  border-radius: 4px;
+  background: #0066cc;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.action-button:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-button__feedback {
+  font-size: 12px;
+}
+
+.action-button__feedback--ok {
+  color: #155724;
+}
+
+.action-button__feedback--error {
+  color: #721c24;
+}
