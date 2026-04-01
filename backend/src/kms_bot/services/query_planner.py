@@ -127,14 +127,10 @@ class QueryPlannerService:
                 service = service._services[service._provider]
 
             if isinstance(service, AzureOpenAIAnswerService):
-                result = await service._client.chat(
-                    messages, max_completion_tokens=1024
-                )
+                result = await service._client.chat(messages, max_completion_tokens=1024)
                 provider = "azure_openai"
             elif isinstance(service, GithubModelsAnswerService):
-                result = await service._client.chat(
-                    messages, max_completion_tokens=1024
-                )
+                result = await service._client.chat(messages, max_completion_tokens=1024)
                 provider = "github_models"
             else:
                 logger.warning("Unsupported answer service for planning, using fallback")
@@ -156,7 +152,11 @@ class QueryPlannerService:
             # 解析 JSON 响应
             plan_data = _extract_json(result.content)
             raw_type = plan_data.get("query_type", "knowledge_search")
-            query_type = raw_type if raw_type in ("knowledge_search", "meta_query", "general_chat") else "knowledge_search"
+            query_type = (
+                raw_type
+                if raw_type in ("knowledge_search", "meta_query", "general_chat")
+                else "knowledge_search"
+            )
             return QueryPlan(
                 intent=plan_data.get("intent", "find"),
                 search_keywords=plan_data.get("search_keywords", []),

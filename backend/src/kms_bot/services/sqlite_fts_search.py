@@ -109,8 +109,8 @@ def _sanitize_fts_query(raw: str) -> str:
     if not terms:
         # 回退：将整个清理后的字符串作为单一词项
         fallback = cleaned.strip()
-        return f'{fallback}*' if fallback else '""'
-    return " OR ".join(f'{t}*' for t in terms)
+        return f"{fallback}*" if fallback else '""'
+    return " OR ".join(f"{t}*" for t in terms)
 
 
 class SQLiteFTSSearchService(SearchService):

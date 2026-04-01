@@ -46,8 +46,8 @@ def _sanitize_fts_query(raw: str) -> str:
     terms = [t.strip() for t in cleaned.split() if len(t.strip()) >= 2]
     if not terms:
         fallback = cleaned.strip()
-        return f'{fallback}*' if fallback else '""'
-    return " OR ".join(f'{t}*' for t in terms)
+        return f"{fallback}*" if fallback else '""'
+    return " OR ".join(f"{t}*" for t in terms)
 
 
 class TitleSearchService:

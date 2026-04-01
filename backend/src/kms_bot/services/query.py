@@ -287,7 +287,8 @@ class QueryOrchestratorService(QueryService):
             ]
             if stats["label_distribution"]:
                 labels_text = ", ".join(
-                    f"{label} ({count} docs)" for label, count in stats["label_distribution"].items()
+                    f"{label} ({count} docs)"
+                    for label, count in stats["label_distribution"].items()
                 )
                 context_parts.append(f"Categories/Labels: {labels_text}")
             if stats["titles"]:
@@ -477,7 +478,9 @@ class QueryOrchestratorService(QueryService):
         # 标题搜索无结果时：fallback 到 chunk FTS，从搜索结果推导文章列表
         use_chunk_fallback = reading_count == 0
         if use_chunk_fallback:
-            logger.info("THINKING streaming: title search found 0 articles, falling back to chunk FTS")
+            logger.info(
+                "THINKING streaming: title search found 0 articles, falling back to chunk FTS"
+            )
             fallback_hits = await self._search.search(
                 query=search_query, top_k=self._settings.query.top_k
             )
