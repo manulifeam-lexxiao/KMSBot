@@ -28,6 +28,7 @@ class QueryPlan:
     label_filters: list[str]
     synonym_expansions: list[str]
     reasoning: str
+    query_type: str = "knowledge_search"  # knowledge_search | meta_query | general_chat
 
     @property
     def all_search_terms(self) -> list[str]:
@@ -70,6 +71,7 @@ def _fallback_plan(query: str) -> QueryPlan:
         label_filters=[],
         synonym_expansions=[],
         reasoning="Fallback: simple keyword extraction",
+        query_type="knowledge_search",
     )
 
 
@@ -153,12 +155,15 @@ class QueryPlannerService:
 
             # 解析 JSON 响应
             plan_data = _extract_json(result.content)
+            raw_type = plan_data.get("query_type", "knowledge_search")
+            query_type = raw_type if raw_type in ("knowledge_search", "meta_query", "general_chat") else "knowledge_search"
             return QueryPlan(
                 intent=plan_data.get("intent", "find"),
                 search_keywords=plan_data.get("search_keywords", []),
                 label_filters=plan_data.get("label_filters", []),
                 synonym_expansions=plan_data.get("synonym_expansions", []),
                 reasoning=plan_data.get("reasoning", ""),
+                query_type=query_type,
             )
 
         except Exception as exc:

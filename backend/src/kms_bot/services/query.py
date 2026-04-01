@@ -48,6 +48,7 @@ from collections.abc import AsyncIterator
 from difflib import SequenceMatcher
 
 from kms_bot.core.settings import ApplicationSettings
+from kms_bot.repositories.document_registry import DocumentRegistryRepository
 from kms_bot.schemas.query import (
     AnswerGeneratorInput,
     QueryDebugInfo,
@@ -184,12 +185,14 @@ class QueryOrchestratorService(QueryService):
         answer_service: AnswerService,
         query_planner: QueryPlannerService | None = None,
         title_search: TitleSearchService | None = None,
+        registry_repository: DocumentRegistryRepository | None = None,
     ) -> None:
         self._settings = settings
         self._search = search_service
         self._answer = answer_service
         self._planner = query_planner
         self._title_search = title_search
+        self._registry = registry_repository
 
     async def answer_query(self, request: QueryRequest) -> QueryResponse:
         normalized = normalize_query(request.query)
@@ -209,6 +212,13 @@ class QueryOrchestratorService(QueryService):
 
         if request.thinking and self._title_search:
             return await self._thinking_mode(request, normalized, search_query, plan)
+
+        # ---- 根据 query_type 路由 ----
+        query_type = plan.query_type if plan else "knowledge_search"
+        if query_type == "meta_query":
+            return await self._meta_query_mode(request, normalized, plan)
+        if query_type == "general_chat":
+            return await self._general_chat_mode(request, normalized, plan)
 
         return await self._standard_mode(request, normalized, search_query, plan)
 
@@ -260,6 +270,86 @@ class QueryOrchestratorService(QueryService):
             debug=debug,
         )
 
+    async def _meta_query_mode(
+        self,
+        request: QueryRequest,
+        normalized: str,
+        plan: QueryPlan | None,
+    ) -> QueryResponse:
+        """元查询模式：回答关于知识库本身的问题（文档列表、统计等）。"""
+        logger.info("Routing to meta_query mode")
+
+        if self._registry:
+            stats = self._registry.get_summary_stats()
+            context_parts = [
+                f"总文档数: {stats['total_documents']}",
+                f"总内容块数: {stats['total_chunks']}",
+            ]
+            if stats["label_distribution"]:
+                labels_text = ", ".join(
+                    f"{label} ({count}篇)" for label, count in stats["label_distribution"].items()
+                )
+                context_parts.append(f"分类标签: {labels_text}")
+            if stats["titles"]:
+                titles_text = "\n".join(f"- {t}" for t in stats["titles"])
+                context_parts.append(f"文档列表:\n{titles_text}")
+            context_text = "\n\n".join(context_parts)
+        else:
+            context_text = "暂无知识库元数据可用。"
+
+        payload = AnswerGeneratorInput(
+            query=request.query,
+            normalized_query=normalized,
+            prompt_template_path="prompts/query_answering/meta_query.md",
+            selected_chunks=[],
+            context_text=context_text,
+            include_debug=request.include_debug,
+        )
+        answer = await self._answer.generate_answer(payload)
+
+        debug = QueryDebugInfo(
+            normalized_query=normalized,
+            selected_chunks=[],
+            query_type="meta_query",
+        )
+        return QueryResponse(
+            answer=answer,
+            sources=[],
+            related_documents=[],
+            debug=debug,
+        )
+
+    async def _general_chat_mode(
+        self,
+        request: QueryRequest,
+        normalized: str,
+        plan: QueryPlan | None,
+    ) -> QueryResponse:
+        """通用对话模式：处理闲聊、问候等非知识库查询。"""
+        logger.info("Routing to general_chat mode")
+
+        payload = AnswerGeneratorInput(
+            query=request.query,
+            normalized_query=normalized,
+            prompt_template_path="prompts/query_answering/general_chat.md",
+            selected_chunks=[],
+            context_text=request.query,
+            include_debug=request.include_debug,
+        )
+        answer = await self._answer.generate_answer(payload)
+
+        debug = QueryDebugInfo(
+            normalized_query=normalized,
+            selected_chunks=[],
+            query_type="general_chat",
+        )
+        return QueryResponse(
+            answer=answer,
+            sources=[],
+            related_documents=[],
+            debug=debug,
+        )
+
     async def _thinking_mode(
         self,
         request: QueryRequest,
@@ -276,8 +366,19 @@ class QueryOrchestratorService(QueryService):
         title_hits = await self._title_search.search(query=search_query, top_k=max_articles * 3)
         logger.info("THINKING: found %d candidate articles", len(title_hits))
 
-        # 2. 取 top N 篇文章的全文 chunks
+        # 2. 取 top N 篇文章的全文 chunks（标题搜索无结果时 fallback 到 chunk FTS）
         selected_page_ids = [h.page_id for h in title_hits[:max_articles]]
+        if not selected_page_ids:
+            logger.info("THINKING: title search returned 0, falling back to chunk FTS")
+            fallback_hits = await self._search.search(
+                query=search_query, top_k=self._settings.query.top_k
+            )
+            seen_ids: dict[str, None] = {}
+            for h in fallback_hits:
+                seen_ids.setdefault(h.doc_id, None)
+                if len(seen_ids) >= max_articles:
+                    break
+            selected_page_ids = list(seen_ids.keys())
         all_chunks = await self._load_chunks_for_pages(selected_page_ids)
         logger.info(
             "THINKING: loaded %d chunks from %d articles", len(all_chunks), len(selected_page_ids)
@@ -368,6 +469,22 @@ class QueryOrchestratorService(QueryService):
         selected_page_ids = [h.page_id for h in title_hits[:max_articles]]
         articles_found = len(title_hits)
         reading_count = len(selected_page_ids)
+
+        # 标题搜索无结果时：fallback 到 chunk FTS，从搜索结果推导文章列表
+        use_chunk_fallback = reading_count == 0
+        if use_chunk_fallback:
+            logger.info("THINKING streaming: title search found 0 articles, falling back to chunk FTS")
+            fallback_hits = await self._search.search(
+                query=search_query, top_k=self._settings.query.top_k
+            )
+            seen_ids: dict[str, None] = {}
+            for h in fallback_hits:
+                seen_ids.setdefault(h.doc_id, None)
+                if len(seen_ids) >= max_articles:
+                    break
+            selected_page_ids = list(seen_ids.keys())
+            reading_count = len(selected_page_ids)
+            articles_found = reading_count
 
         yield {
             "stage": "searching",

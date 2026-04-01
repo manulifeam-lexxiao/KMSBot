@@ -97,8 +97,9 @@ class _IndexState:
 def _sanitize_fts_query(raw: str) -> str:
     """将用户输入安全地转换为 FTS5 MATCH 表达式。
 
-    使用 OR 语义：只要有任一词项命中即返回结果，由 BM25 负责排序。
-    这比 AND 语义有更好的召回率，适合自然语言问答场景。
+    使用 OR + 前缀匹配（term*）：只要有任一词项或其前缀命中即返回结果，
+    由 BM25 负责排序。前缀匹配可显著提高英文词形变化的召回率
+    （如 "leav*" 能匹配 leave / leaves / leaving）。
 
     FTS5 特殊字符（" * ^ ( ) - + :）会被替换为空格避免语法错误。
     """
@@ -108,8 +109,8 @@ def _sanitize_fts_query(raw: str) -> str:
     if not terms:
         # 回退：将整个清理后的字符串作为单一词项
         fallback = cleaned.strip()
-        return f'"{fallback}"' if fallback else '""'
-    return " OR ".join(f'"{t}"' for t in terms)
+        return f'{fallback}*' if fallback else '""'
+    return " OR ".join(f'{t}*' for t in terms)
 
 
 class SQLiteFTSSearchService(SearchService):

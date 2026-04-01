@@ -37,14 +37,17 @@ class TitleSearchHit:
 
 
 def _sanitize_fts_query(raw: str) -> str:
-    """将搜索词转换为 FTS5 安全的 MATCH 表达式（OR 语义）。"""
+    """将搜索词转换为 FTS5 安全的 MATCH 表达式（OR + 前缀匹配）。
+
+    使用前缀匹配（term*）可提高英文词形变化的标题搜索召回率。
+    """
     special = set('"*^()-+:')
     cleaned = "".join(c if c not in special else " " for c in raw)
     terms = [t.strip() for t in cleaned.split() if len(t.strip()) >= 2]
     if not terms:
         fallback = cleaned.strip()
-        return f'"{fallback}"' if fallback else '""'
-    return " OR ".join(f'"{t}"' for t in terms)
+        return f'{fallback}*' if fallback else '""'
+    return " OR ".join(f'{t}*' for t in terms)
 
 
 class TitleSearchService:

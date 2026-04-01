@@ -25,6 +25,7 @@ from kms_bot.services.query import (
     normalize_query,
     suppress_duplicates,
 )
+from kms_bot.services.query_planner import QueryPlan, QueryPlannerService
 
 
 # ── helpers ───────────────────────────────────────────────────
@@ -296,3 +297,109 @@ class TestQueryOrchestratorService:
         assert resp.answer == "No results"
         assert resp.sources == []
         assert resp.related_documents == []
+
+
+# ── Stub QueryPlanner for routing tests ───────────────────────
+
+
+class _StubQueryPlanner:
+    """模拟 QueryPlannerService，返回指定 query_type 的 plan。"""
+
+    def __init__(self, query_type: str = "knowledge_search") -> None:
+        self._query_type = query_type
+
+    async def plan(self, query: str, *, mode: str = "standard") -> QueryPlan:
+        return QueryPlan(
+            intent="find",
+            search_keywords=[],
+            label_filters=[],
+            synonym_expansions=[],
+            reasoning="stub",
+            query_type=self._query_type,
+        )
+
+
+class _StubRegistryRepository:
+    """模拟 DocumentRegistryRepository.get_summary_stats()。"""
+
+    def get_summary_stats(self) -> dict:
+        return {
+            "total_documents": 3,
+            "total_chunks": 15,
+            "titles": ["Doc A", "Doc B", "Doc C"],
+            "label_distribution": {"FAQ": 2, "Guide": 1},
+        }
+
+
+# ── Query routing tests ──────────────────────────────────────
+
+
+class TestQueryRouting:
+    @pytest.mark.asyncio
+    async def test_meta_query_routing(self, settings: ApplicationSettings) -> None:
+        search = _StubSearchService([])
+        answer_svc = _StubAnswerService("知识库共有3篇文档")
+        planner = _StubQueryPlanner(query_type="meta_query")
+        registry = _StubRegistryRepository()
+
+        svc = QueryOrchestratorService(
+            settings=settings,
+            search_service=search,
+            answer_service=answer_svc,
+            query_planner=planner,
+            registry_repository=registry,
+        )
+
+        resp = await svc.answer_query(
+            QueryRequest(query="数据库里有什么内容", top_k=5, include_debug=True)
+        )
+        assert resp.answer == "知识库共有3篇文档"
+        assert resp.sources == []
+        assert resp.debug.query_type == "meta_query"
+        # 验证 meta_query 使用 meta_query.md 模板
+        assert answer_svc.last_payload is not None
+        assert "meta_query" in answer_svc.last_payload.prompt_template_path
+
+    @pytest.mark.asyncio
+    async def test_general_chat_routing(self, settings: ApplicationSettings) -> None:
+        search = _StubSearchService([])
+        answer_svc = _StubAnswerService("你好！我是 KMS Bot")
+        planner = _StubQueryPlanner(query_type="general_chat")
+
+        svc = QueryOrchestratorService(
+            settings=settings,
+            search_service=search,
+            answer_service=answer_svc,
+            query_planner=planner,
+        )
+
+        resp = await svc.answer_query(
+            QueryRequest(query="你好", top_k=5, include_debug=True)
+        )
+        assert resp.answer == "你好！我是 KMS Bot"
+        assert resp.sources == []
+        assert resp.debug.query_type == "general_chat"
+        # 验证 general_chat 使用 general_chat.md 模板
+        assert answer_svc.last_payload is not None
+        assert "general_chat" in answer_svc.last_payload.prompt_template_path
+
+    @pytest.mark.asyncio
+    async def test_knowledge_search_routing_unchanged(self, settings: ApplicationSettings) -> None:
+        hits = [_hit(chunk_id="1#a#1", content="Alpha")]
+        search = _StubSearchService(hits)
+        answer_svc = _StubAnswerService("Answer from KB")
+        planner = _StubQueryPlanner(query_type="knowledge_search")
+
+        svc = QueryOrchestratorService(
+            settings=settings,
+            search_service=search,
+            answer_service=answer_svc,
+            query_planner=planner,
+        )
+
+        resp = await svc.answer_query(
+            QueryRequest(query="how to reset password", top_k=5, include_debug=True)
+        )
+        assert resp.answer == "Answer from KB"
+        assert len(resp.sources) == 1
+        assert resp.debug.query_type == "knowledge_search"

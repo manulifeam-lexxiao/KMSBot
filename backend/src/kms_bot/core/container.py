@@ -159,6 +159,7 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
         answer_service=answer_router,
         query_planner=query_planner,
         title_search=title_search,
+        registry_repository=registry_repository,
     )
 
     return ServiceContainer(

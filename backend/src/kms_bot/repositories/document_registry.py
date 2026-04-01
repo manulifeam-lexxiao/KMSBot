@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from kms_bot.repositories.base import BaseRepository
 from kms_bot.schemas.registry import DocumentRegistryRecord
 
@@ -122,3 +124,31 @@ class DocumentRegistryRepository(BaseRepository):
                 labels,
             ),
         )
+
+    def get_summary_stats(self) -> dict:
+        """获取知识库元数据摘要：文档数量、标题列表、标签分布等。"""
+        total = self.count_all()
+
+        rows = self.fetch_all(
+            "SELECT page_id, title, labels, chunk_count FROM document_registry ORDER BY title"
+        )
+
+        titles: list[str] = []
+        label_counts: dict[str, int] = {}
+        total_chunks = 0
+        for row in rows:
+            titles.append(row["title"])
+            total_chunks += row.get("chunk_count", 0) or 0
+            try:
+                labels = json.loads(row.get("labels", "[]"))
+                for label in labels:
+                    label_counts[label] = label_counts.get(label, 0) + 1
+            except (json.JSONDecodeError, TypeError):
+                continue
+
+        return {
+            "total_documents": total,
+            "total_chunks": total_chunks,
+            "titles": titles,
+            "label_distribution": label_counts,
+        }

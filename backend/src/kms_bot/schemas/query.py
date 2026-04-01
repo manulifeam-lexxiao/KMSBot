@@ -34,6 +34,7 @@ class RelatedDocument(StrictSchemaModel):
 class QueryDebugInfo(StrictSchemaModel):
     normalized_query: str
     selected_chunks: list[SearchResultHit]
+    query_type: str = "knowledge_search"
 
 
 class QueryResponse(StrictSchemaModel):

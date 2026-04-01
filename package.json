@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,yellow\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:r": "powershell -ExecutionPolicy Bypass -File scripts/restart-dev.ps1",
     "dev:backend": "uvicorn kms_bot.main:app --reload --host 127.0.0.1 --port 8000 --app-dir backend/src",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,yellow\" \".venv\\\\Scripts\\\\python.exe -m ruff check backend/src\" \"npm run build --prefix frontend\"",
