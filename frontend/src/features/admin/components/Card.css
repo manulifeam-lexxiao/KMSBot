@@ -4,6 +4,41 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: border-color var(--transition-fast);
+  position: relative;
+}
+
+/* ---- Running progress bar ---- */
+.admin-card__progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--progress-height);
+  background: var(--border-subtle);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.admin-card__progress-bar {
+  height: 100%;
+  width: 40%;
+  background: var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  animation: progress-indeterminate 1.6s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+    width: 30%;
+  }
+  50% {
+    width: 50%;
+  }
+  100% {
+    transform: translateX(350%);
+    width: 30%;
+  }
 }
 
 .admin-card:hover {

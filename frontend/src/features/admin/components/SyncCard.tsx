@@ -22,6 +22,11 @@ export function SyncCard({ data, error, isLoading, fullSync, incrementalSync }: 
 
   return (
     <section className="admin-card">
+      {isBusy && (
+        <div className="admin-card__progress">
+          <div className="admin-card__progress-bar" />
+        </div>
+      )}
       <h2 className="admin-card__title">Sync</h2>
       {isLoading && !data && <p className="admin-card__loading">Loading…</p>}
       {error && <p className="admin-card__error">{error}</p>}

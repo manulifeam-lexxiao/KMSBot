@@ -1,12 +1,12 @@
 .related-docs {
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .related-docs__title {
-  margin: 0 0 4px;
-  font-size: 12px;
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
   text-transform: uppercase;
-  color: #666;
+  color: var(--text-3);
 }
 
 .related-docs__items {
@@ -15,7 +15,7 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .related-docs__item {
@@ -23,7 +23,7 @@
 }
 
 .related-docs__link {
-  color: #0078d4;
+  color: var(--color-link);
   text-decoration: none;
 }
 

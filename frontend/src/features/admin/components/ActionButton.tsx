@@ -25,7 +25,14 @@ export function ActionButton({
         onClick={onClick}
         disabled={disabled || isRunning}
       >
-        {isRunning ? "Running…" : label}
+        {isRunning ? (
+          <>
+            <span className="action-button__spinner" aria-hidden="true">
+              <span /><span /><span />
+            </span>
+            Running…
+          </>
+        ) : label}
       </button>
       {lastError && (
         <span className="action-button__feedback action-button__feedback--error">{lastError}</span>

@@ -21,6 +21,11 @@ export function IndexCard({ data, error, isLoading, indexRebuild }: IndexCardPro
 
   return (
     <section className="admin-card">
+      {isBusy && (
+        <div className="admin-card__progress">
+          <div className="admin-card__progress-bar" />
+        </div>
+      )}
       <h2 className="admin-card__title">Index</h2>
       {isLoading && !data && <p className="admin-card__loading">Loading…</p>}
       {error && <p className="admin-card__error">{error}</p>}

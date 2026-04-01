@@ -11,7 +11,6 @@ export function ChatPage() {
   return (
     <div className="chat-page">
       <header className="chat-page__header">
-        <h1 className="chat-page__title">KMS Bot</h1>
         <div className="chat-page__actions">
           <label className="chat-page__debug-toggle">
             <input

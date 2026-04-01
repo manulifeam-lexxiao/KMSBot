@@ -1,12 +1,12 @@
 .source-list {
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .source-list__title {
-  margin: 0 0 4px;
-  font-size: 12px;
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
   text-transform: uppercase;
-  color: #666;
+  color: var(--text-3);
 }
 
 .source-list__items {
@@ -21,15 +21,15 @@
 .source-list__item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background: #f0f6ff;
-  border-radius: 4px;
-  font-size: 12px;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: var(--accent-muted);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
 }
 
 .source-list__link {
-  color: #0078d4;
+  color: var(--color-link);
   text-decoration: none;
 }
 
@@ -38,5 +38,5 @@
 }
 
 .source-list__section {
-  color: #888;
+  color: var(--text-3);
 }

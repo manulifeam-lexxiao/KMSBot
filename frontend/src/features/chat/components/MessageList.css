@@ -33,7 +33,7 @@
 .message-list__bubble--user {
   align-self: flex-end;
   background: var(--accent-muted);
-  border: 1px solid rgba(232, 168, 64, 0.2);
+  border: 1px solid var(--accent-muted);
   color: var(--text-1);
   border-bottom-right-radius: var(--radius-sm);
 }
