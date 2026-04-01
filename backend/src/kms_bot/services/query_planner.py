@@ -124,16 +124,16 @@ class QueryPlannerService:
 
             service = self._answer_service
             if isinstance(service, ProviderAnswerRouter):
-                service = service._current_service  # type: ignore[attr-defined]
+                service = service._services[service._provider]
 
             if isinstance(service, AzureOpenAIAnswerService):
                 result = await service._client.chat(
-                    messages, temperature=0.0, max_completion_tokens=512
+                    messages, max_completion_tokens=1024
                 )
                 provider = "azure_openai"
             elif isinstance(service, GithubModelsAnswerService):
                 result = await service._client.chat(
-                    messages, temperature=0.0, max_completion_tokens=512
+                    messages, max_completion_tokens=1024
                 )
                 provider = "github_models"
             else:

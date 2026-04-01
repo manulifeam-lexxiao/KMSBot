@@ -1,6 +1,6 @@
-# 重启开发环境：先关闭所有后端进程，再重新启动完整调试
+# Restart dev: kill all backend processes, then start a fresh debug session
 
-Write-Host "正在关闭后端进程 (port 8000)..." -ForegroundColor Cyan
+Write-Host "Stopping backend processes (port 8000)..." -ForegroundColor Cyan
 
 $connections = netstat -ano 2>$null | Select-String ":\b8000\b"
 if ($connections) {
@@ -12,17 +12,17 @@ if ($connections) {
     foreach ($p in $pids) {
         try {
             Stop-Process -Id ([int]$p) -Force -ErrorAction Stop
-            Write-Host "  已终止进程 PID: $p" -ForegroundColor Yellow
+            Write-Host "  Killed PID: $p" -ForegroundColor Yellow
         } catch {
-            Write-Host "  跳过 PID: $p ($($_.Exception.Message))" -ForegroundColor DarkGray
+            Write-Host "  Skipped PID: $p ($($_.Exception.Message))" -ForegroundColor DarkGray
         }
     }
 } else {
-    Write-Host "  未发现占用端口 8000 的进程" -ForegroundColor Green
+    Write-Host "  No process found on port 8000" -ForegroundColor Green
 }
 
-# 等待端口释放
+# Wait for port release
 Start-Sleep -Seconds 1
 
-Write-Host "正在启动开发服务器..." -ForegroundColor Cyan
+Write-Host "Starting dev server..." -ForegroundColor Cyan
 npm run dev
