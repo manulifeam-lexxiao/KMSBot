@@ -141,7 +141,7 @@ class AzureOpenAIClient:
         messages: list[ChatMessage],
         *,
         temperature: float | None = None,
-        max_completion_tokens: int | None = 1024,
+        max_completion_tokens: int | None = None,
     ) -> ChatCompletionResult:
         """Send a chat-completion request and return the first choice."""
         body: dict = {

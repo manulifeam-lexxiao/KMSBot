@@ -50,15 +50,16 @@ class GithubModelsClient:
         messages: list[ChatMessage],
         *,
         temperature: float = 0.0,
-        max_tokens: int = 1024,
+        max_tokens: int | None = None,
     ) -> ChatCompletionResult:
         """Send a chat-completion request to GitHub Models."""
         body = {
             "model": self._model_name,
             "messages": [{"role": m.role, "content": m.content} for m in messages],
             "temperature": temperature,
-            "max_tokens": max_tokens,
         }
+        if max_tokens is not None:
+            body["max_tokens"] = max_tokens
         logger.debug(
             "GitHub Models request – model=%s  messages=%d",
             self._model_name,

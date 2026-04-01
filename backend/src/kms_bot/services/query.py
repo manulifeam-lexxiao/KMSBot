@@ -282,17 +282,21 @@ class QueryOrchestratorService(QueryService):
         if self._registry:
             stats = self._registry.get_summary_stats()
             context_parts = [
-                f"总文档数: {stats['total_documents']}",
-                f"总内容块数: {stats['total_chunks']}",
+                f"Total documents: {stats['total_documents']}",
+                f"Total content chunks: {stats['total_chunks']}",
             ]
             if stats["label_distribution"]:
                 labels_text = ", ".join(
-                    f"{label} ({count}篇)" for label, count in stats["label_distribution"].items()
+                    f"{label} ({count} docs)" for label, count in stats["label_distribution"].items()
                 )
-                context_parts.append(f"分类标签: {labels_text}")
+                context_parts.append(f"Categories/Labels: {labels_text}")
             if stats["titles"]:
-                titles_text = "\n".join(f"- {t}" for t in stats["titles"])
-                context_parts.append(f"文档列表:\n{titles_text}")
+                max_titles = 30
+                shown = stats["titles"][:max_titles]
+                titles_text = "\n".join(f"- {t}" for t in shown)
+                if len(stats["titles"]) > max_titles:
+                    titles_text += f"\n  ... and {len(stats['titles']) - max_titles} more documents"
+                context_parts.append(f"Sample document titles:\n{titles_text}")
             context_text = "\n\n".join(context_parts)
         else:
             context_text = "暂无知识库元数据可用。"
