@@ -121,3 +121,8 @@
   font-family: var(--font-mono);
   animation: pulse 1.5s infinite;
 }
+
+.provider-option__badge--warn {
+  color: var(--color-warning);
+  background: var(--color-warning-muted);
+}

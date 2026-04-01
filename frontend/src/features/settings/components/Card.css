@@ -19,12 +19,37 @@
   z-index: 1;
 }
 
+.settings-card__progress--bottom {
+  top: auto;
+  bottom: 0;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
 .settings-card__progress-bar {
   height: 100%;
   width: 40%;
   background: var(--accent);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   animation: progress-indeterminate 1.6s ease-in-out infinite;
+}
+
+.settings-card__progress-bar--determinate {
+  animation: none;
+  transform: none;
+  border-radius: 0;
+  transition: width 0.4s ease;
+}
+
+.settings-card__progress-label {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  color: var(--text-2);
+  line-height: 1;
+  pointer-events: none;
 }
 
 @keyframes progress-indeterminate {

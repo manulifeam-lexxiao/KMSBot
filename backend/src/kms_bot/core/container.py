@@ -29,6 +29,7 @@ from kms_bot.services.placeholders import (
 from kms_bot.services.query import QueryOrchestratorService
 from kms_bot.services.query_planner import QueryPlannerService
 from kms_bot.services.search import AzureAISearchService
+from kms_bot.services.search_router import SearchProviderRouter
 from kms_bot.services.sqlite_fts_search import SQLiteFTSSearchService
 from kms_bot.services.sync import ConfluenceSyncService
 from kms_bot.services.title_search import TitleSearchService
@@ -46,12 +47,14 @@ class ServiceContainer:
     search_service: SearchService
     answer_service: AnswerService
     answer_router: ProviderAnswerRouter
+    search_router: SearchProviderRouter
     query_service: QueryService
 
     def post_initialize(self) -> None:
         """在 database.initialize() 之后调用，完成需要 DB 存在的服务初始化。"""
-        if isinstance(self.search_service, SQLiteFTSSearchService):
-            self.search_service.initialize_table()
+        sqlite_svc = self.search_router._services.get("sqlite_fts5")
+        if isinstance(sqlite_svc, SQLiteFTSSearchService):
+            sqlite_svc.initialize_table()
 
     def close(self) -> None:
         return None
@@ -71,26 +74,33 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
         parse_service=parse_service,
         chunk_service=chunk_service,
     )
-    search_service: SearchService
-    if settings.search.provider == "sqlite_fts5":
-        search_service = SQLiteFTSSearchService(
-            settings=settings,
-            database=database,
-            registry_repository=registry_repository,
-        )
-    elif settings.search.is_configured:
-        azure_client = AzureSearchClient(
+    # 始终创建两个 search service 实例，以支持运行时切换
+    sqlite_search = SQLiteFTSSearchService(
+        settings=settings,
+        database=database,
+        registry_repository=registry_repository,
+    )
+    if settings.search.is_configured and settings.search.provider != "sqlite_fts5":
+        azure_search_client = AzureSearchClient(
             endpoint=settings.search.endpoint,
             api_key=settings.search.api_key,
             index_name=settings.search.index_name,
         )
-        search_service = AzureAISearchService(
+        azure_search: SearchService = AzureAISearchService(
             settings=settings,
-            azure_client=azure_client,
+            azure_client=azure_search_client,
             registry_repository=registry_repository,
         )
     else:
-        search_service = PlaceholderSearchService(settings, registry_repository)
+        azure_search = PlaceholderSearchService(settings, registry_repository)
+
+    search_router = SearchProviderRouter(
+        default_provider=settings.search.provider
+        if settings.search.provider in ("sqlite_fts5", "azure_ai_search")
+        else "sqlite_fts5",
+        sqlite_service=sqlite_search,
+        azure_service=azure_search,
+    )
 
     # Build answer services for each supported provider
     azure_answer: AnswerService
@@ -145,7 +155,7 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
 
     query_service = QueryOrchestratorService(
         settings=settings,
-        search_service=search_service,
+        search_service=search_router,
         answer_service=answer_router,
         query_planner=query_planner,
         title_search=title_search,
@@ -159,8 +169,9 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
         sync_service=sync_service,
         parse_service=parse_service,
         chunk_service=chunk_service,
-        search_service=search_service,
+        search_service=search_router,
         answer_service=answer_router,
         answer_router=answer_router,
+        search_router=search_router,
         query_service=query_service,
     )

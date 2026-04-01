@@ -44,9 +44,8 @@ import json
 import logging
 import re
 from collections import Counter
+from collections.abc import AsyncIterator
 from difflib import SequenceMatcher
-from pathlib import Path
-from typing import AsyncIterator
 
 from kms_bot.core.settings import ApplicationSettings
 from kms_bot.schemas.query import (

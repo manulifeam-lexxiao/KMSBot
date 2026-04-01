@@ -1,4 +1,10 @@
-import type { TokenUsageSummary, ThinkingSettings } from "../../types/settings";
+import type {
+  TokenUsageSummary,
+  ThinkingSettings,
+  QuerySettings,
+  SearchProviderStatus,
+  ConfluenceStatus,
+} from "../../types/settings";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -52,4 +58,39 @@ export async function setThinkingSettings(settings: ThinkingSettings): Promise<T
     body: JSON.stringify(settings),
   });
   return handleResponse<ThinkingSettings>(res);
+}
+
+export async function getQuerySettings(): Promise<QuerySettings> {
+  const res = await fetch(`${BASE_URL}/api/settings/query`);
+  return handleResponse<QuerySettings>(res);
+}
+
+export async function setQuerySettings(updates: Partial<QuerySettings>): Promise<QuerySettings> {
+  const res = await fetch(`${BASE_URL}/api/settings/query`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  return handleResponse<QuerySettings>(res);
+}
+
+export async function getSearchProvider(): Promise<SearchProviderStatus> {
+  const res = await fetch(`${BASE_URL}/api/settings/search-provider`);
+  return handleResponse<SearchProviderStatus>(res);
+}
+
+export async function setSearchProvider(
+  provider: SearchProviderStatus["provider"],
+): Promise<SearchProviderStatus> {
+  const res = await fetch(`${BASE_URL}/api/settings/search-provider`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider }),
+  });
+  return handleResponse<SearchProviderStatus>(res);
+}
+
+export async function getConfluenceStatus(): Promise<ConfluenceStatus> {
+  const res = await fetch(`${BASE_URL}/api/settings/confluence`);
+  return handleResponse<ConfluenceStatus>(res);
 }

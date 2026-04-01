@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQueryChat } from "../../hooks/useQueryChat";
+import { useDebugPreference } from "../../hooks/useDebugPreference";
 import { MessageList } from "./components/MessageList";
 import { ChatInput } from "./components/ChatInput";
 import "./ChatPage.css";
 
 export function ChatPage() {
-  const [includeDebug, setIncludeDebug] = useState(false);
+  const { includeDebug, setIncludeDebug } = useDebugPreference();
   const [thinking, setThinking] = useState(false);
   const { messages, isLoading, sendMessage, clearMessages } = useQueryChat(includeDebug, thinking);
 

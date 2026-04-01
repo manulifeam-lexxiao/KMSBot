@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+  ConfluenceStatus,
   HealthResponse,
   IndexStatusResponse,
   OperationAcceptedResponse,
@@ -7,6 +8,7 @@ import type {
 } from "../types/settings";
 import * as realApi from "../services/api/operationsApi";
 import * as mockApi from "../services/api/operationsMock";
+import { getConfluenceStatus } from "../services/api/settingsApi";
 
 const useMock = import.meta.env.VITE_MOCK_API === "true";
 
@@ -116,6 +118,7 @@ export interface UseSettings {
   health: PollState<HealthResponse>;
   syncStatus: PollState<SyncStatusResponse>;
   indexStatus: PollState<IndexStatusResponse>;
+  confluenceStatus: PollState<ConfluenceStatus>;
   fullSync: ActionState;
   incrementalSync: ActionState;
   indexRebuild: ActionState;
@@ -125,6 +128,7 @@ export function useSettings(): UseSettings {
   const health = usePoll(api.getHealth, 15_000);
   const syncStatus = usePoll(api.getSyncStatus, 8_000);
   const indexStatus = usePoll(api.getIndexStatus, 8_000);
+  const confluenceStatus = usePoll(getConfluenceStatus, 15_000);
 
   const fullSync = useAction(api.triggerFullSync, syncStatus.refresh);
   const incrementalSync = useAction(api.triggerIncrementalSync, syncStatus.refresh);
@@ -134,6 +138,7 @@ export function useSettings(): UseSettings {
     health,
     syncStatus,
     indexStatus,
+    confluenceStatus,
     fullSync,
     incrementalSync,
     indexRebuild,

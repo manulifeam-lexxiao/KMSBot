@@ -14,6 +14,7 @@ from kms_bot.services.interfaces import (
     SearchService,
     SyncService,
 )
+from kms_bot.services.search_router import SearchProviderRouter
 
 
 def get_settings(request: Request) -> ApplicationSettings:
@@ -50,6 +51,10 @@ def get_query_service(container: ServiceContainer = Depends(get_container)) -> Q
 
 def get_answer_router(container: ServiceContainer = Depends(get_container)) -> ProviderAnswerRouter:
     return container.answer_router
+
+
+def get_search_router(container: ServiceContainer = Depends(get_container)) -> SearchProviderRouter:
+    return container.search_router
 
 
 def get_token_usage_repository(

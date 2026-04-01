@@ -20,11 +20,31 @@ function fmtTime(iso: string | null): string {
 export function SyncCard({ data, error, isLoading, fullSync, incrementalSync }: SyncCardProps) {
   const isBusy = data?.status === "running" || fullSync.isRunning || incrementalSync.isRunning;
 
+  const progressPct =
+    data && data.changed_pages > 0
+      ? Math.min(Math.round((data.processed_pages / data.changed_pages) * 100), 100)
+      : null;
+
   return (
     <section className="settings-card">
       {isBusy && (
         <div className="settings-card__progress">
           <div className="settings-card__progress-bar" />
+        </div>
+      )}
+      {isBusy && (
+        <div className="settings-card__progress settings-card__progress--bottom">
+          {progressPct !== null ? (
+            <>
+              <div
+                className="settings-card__progress-bar settings-card__progress-bar--determinate"
+                style={{ width: `${progressPct}%` }}
+              />
+              <span className="settings-card__progress-label">{progressPct}%</span>
+            </>
+          ) : (
+            <div className="settings-card__progress-bar" />
+          )}
         </div>
       )}
       <h2 className="settings-card__title">Sync</h2>

@@ -82,3 +82,27 @@ export interface TokenUsageSummary {
 export interface ThinkingSettings {
   thinking_max_articles: number;
 }
+
+/** Query settings */
+export interface QuerySettings {
+  top_k: number;
+  max_chunks_per_doc: number;
+  similarity_threshold: number;
+}
+
+/** Search provider status */
+export interface SearchProviderStatus {
+  provider: "sqlite_fts5" | "azure_ai_search";
+  available_providers: string[];
+  azure_configured: boolean;
+}
+
+/** Confluence connectivity status */
+export interface ConfluenceStatus {
+  configured: boolean;
+  base_url: string | null;
+  space_key: string | null;
+  page_limit: number | null;
+  connectivity: "ok" | "error" | "not_configured";
+  error_detail: string | null;
+}
