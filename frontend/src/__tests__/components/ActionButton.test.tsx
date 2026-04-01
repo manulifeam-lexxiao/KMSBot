@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { ActionButton } from "../../features/admin/components/ActionButton";
+import { ActionButton } from "../../features/settings/components/ActionButton";
 
 describe("ActionButton", () => {
   it("renders button with provided label", () => {

@@ -25,7 +25,14 @@ class SyncService(ABC):
 
 class ParseService(ABC):
     @abstractmethod
-    async def parse_document(self, *, doc_id: str, title: str, raw_content: str) -> CleanedDocument:
+    async def parse_document(
+        self,
+        *,
+        doc_id: str,
+        title: str,
+        raw_content: str,
+        labels: list[str] | None = None,
+    ) -> CleanedDocument:
         raise NotImplementedError
 
 

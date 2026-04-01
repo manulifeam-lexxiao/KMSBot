@@ -6,13 +6,22 @@ import "./ChatPage.css";
 
 export function ChatPage() {
   const [includeDebug, setIncludeDebug] = useState(false);
-  const { messages, isLoading, sendMessage, clearMessages } = useQueryChat(includeDebug);
+  const [thinking, setThinking] = useState(false);
+  const { messages, isLoading, sendMessage, clearMessages } = useQueryChat(includeDebug, thinking);
 
   return (
     <div className="chat-page">
       <header className="chat-page__header">
         <div className="chat-page__actions">
-          <label className="chat-page__debug-toggle">
+          <label className="chat-page__toggle chat-page__toggle--thinking">
+            <input
+              type="checkbox"
+              checked={thinking}
+              onChange={(e) => setThinking(e.target.checked)}
+            />
+            THINKING
+          </label>
+          <label className="chat-page__toggle">
             <input
               type="checkbox"
               checked={includeDebug}

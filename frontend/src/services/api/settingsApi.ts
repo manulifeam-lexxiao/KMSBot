@@ -1,3 +1,5 @@
+import type { TokenUsageSummary, ThinkingSettings } from "../../types/settings";
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -31,4 +33,23 @@ export async function setProvider(provider: ProviderName): Promise<ProviderStatu
     body: JSON.stringify({ provider }),
   });
   return handleResponse<ProviderStatus>(res);
+}
+
+export async function getTokenUsage(): Promise<TokenUsageSummary> {
+  const res = await fetch(`${BASE_URL}/api/settings/token-usage`);
+  return handleResponse<TokenUsageSummary>(res);
+}
+
+export async function getThinkingSettings(): Promise<ThinkingSettings> {
+  const res = await fetch(`${BASE_URL}/api/settings/thinking`);
+  return handleResponse<ThinkingSettings>(res);
+}
+
+export async function setThinkingSettings(settings: ThinkingSettings): Promise<ThinkingSettings> {
+  const res = await fetch(`${BASE_URL}/api/settings/thinking`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+  });
+  return handleResponse<ThinkingSettings>(res);
 }

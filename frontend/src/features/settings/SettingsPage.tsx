@@ -1,20 +1,24 @@
-import { useAdmin } from "../../hooks/useAdmin";
+import { useSettings } from "../../hooks/useSettings";
 import { HealthCard } from "./components/HealthCard";
 import { SyncCard } from "./components/SyncCard";
 import { IndexCard } from "./components/IndexCard";
+import { TokenUsageCard } from "./components/TokenUsageCard";
+import { ThinkingSettingsCard } from "./components/ThinkingSettingsCard";
 import { ProviderSelector } from "./ProviderSelector";
-import "./AdminPage.css";
+import "./SettingsPage.css";
+import "./components/SettingsCards.css";
 
-export function AdminPage() {
-  const { health, syncStatus, indexStatus, fullSync, incrementalSync, indexRebuild } = useAdmin();
+export function SettingsPage() {
+  const { health, syncStatus, indexStatus, fullSync, incrementalSync, indexRebuild } =
+    useSettings();
 
   return (
-    <div className="admin-page">
-      <header className="admin-page__header">
-        <h1 className="admin-page__title">Administration</h1>
+    <div className="settings-page">
+      <header className="settings-page__header">
+        <h1 className="settings-page__title">Settings</h1>
       </header>
 
-      <div className="admin-page__grid">
+      <div className="settings-page__grid">
         <div className="card animate-in">
           <div className="card__header">
             <h2 className="card__title">AI Provider</h2>
@@ -23,6 +27,9 @@ export function AdminPage() {
             <ProviderSelector />
           </div>
         </div>
+
+        <ThinkingSettingsCard />
+        <TokenUsageCard />
 
         <HealthCard data={health.data} error={health.error} isLoading={health.isLoading} />
         <SyncCard

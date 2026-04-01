@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from kms_bot.core.settings import ApplicationSettings
 from kms_bot.db.sqlite import SQLiteDatabase
 from kms_bot.repositories.document_registry import DocumentRegistryRepository
+from kms_bot.repositories.token_usage import TokenUsageRepository
 from kms_bot.services.answer import AzureOpenAIAnswerService, GithubModelsAnswerService
 from kms_bot.services.answer_router import ProviderAnswerRouter
 from kms_bot.services.azure_search_client import AzureSearchClient
@@ -26,9 +27,11 @@ from kms_bot.services.placeholders import (
     PlaceholderSearchService,
 )
 from kms_bot.services.query import QueryOrchestratorService
+from kms_bot.services.query_planner import QueryPlannerService
 from kms_bot.services.search import AzureAISearchService
 from kms_bot.services.sqlite_fts_search import SQLiteFTSSearchService
 from kms_bot.services.sync import ConfluenceSyncService
+from kms_bot.services.title_search import TitleSearchService
 
 
 @dataclass(slots=True)
@@ -36,6 +39,7 @@ class ServiceContainer:
     settings: ApplicationSettings
     database: SQLiteDatabase
     registry_repository: DocumentRegistryRepository
+    token_usage_repository: TokenUsageRepository
     sync_service: SyncService
     parse_service: ParseService
     chunk_service: ChunkService
@@ -56,6 +60,7 @@ class ServiceContainer:
 def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
     database = SQLiteDatabase(settings)
     registry_repository = DocumentRegistryRepository(database)
+    token_usage_repository = TokenUsageRepository(database)
     confluence_client = ConfluenceClient(settings.confluence)
     parse_service = ConfluenceParseService(settings)
     chunk_service = ConfluenceChunkService(settings, registry_repository)
@@ -101,7 +106,11 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
             client_secret=settings.answer.client_secret,
             scope=settings.answer.scope,
         )
-        azure_answer = AzureOpenAIAnswerService(settings=settings, openai_client=openai_client)
+        azure_answer = AzureOpenAIAnswerService(
+            settings=settings,
+            openai_client=openai_client,
+            token_usage_repository=token_usage_repository,
+        )
     else:
         azure_answer = PlaceholderAnswerService()
 
@@ -111,7 +120,11 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
             api_token=settings.github_models.api_token,
             model_name=settings.github_models.model_name,
         )
-        github_answer = GithubModelsAnswerService(settings=settings, github_client=github_client)
+        github_answer = GithubModelsAnswerService(
+            settings=settings,
+            github_client=github_client,
+            token_usage_repository=token_usage_repository,
+        )
     else:
         github_answer = PlaceholderAnswerService()
 
@@ -121,16 +134,28 @@ def build_service_container(settings: ApplicationSettings) -> ServiceContainer:
         github_service=github_answer,
     )
 
+    query_planner = QueryPlannerService(
+        settings=settings,
+        answer_service=answer_router,
+        registry_repository=registry_repository,
+        token_usage_repository=token_usage_repository,
+    )
+
+    title_search = TitleSearchService(database)
+
     query_service = QueryOrchestratorService(
         settings=settings,
         search_service=search_service,
         answer_service=answer_router,
+        query_planner=query_planner,
+        title_search=title_search,
     )
 
     return ServiceContainer(
         settings=settings,
         database=database,
         registry_repository=registry_repository,
+        token_usage_repository=token_usage_repository,
         sync_service=sync_service,
         parse_service=parse_service,
         chunk_service=chunk_service,

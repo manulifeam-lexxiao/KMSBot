@@ -4,9 +4,9 @@ import type {
   IndexStatusResponse,
   OperationAcceptedResponse,
   SyncStatusResponse,
-} from "../types/admin";
-import * as realApi from "../services/api/adminApi";
-import * as mockApi from "../services/api/adminMock";
+} from "../types/settings";
+import * as realApi from "../services/api/operationsApi";
+import * as mockApi from "../services/api/operationsMock";
 
 const useMock = import.meta.env.VITE_MOCK_API === "true";
 
@@ -112,7 +112,7 @@ function useAction(
 /*  Public composite hook                                              */
 /* ------------------------------------------------------------------ */
 
-export interface UseAdmin {
+export interface UseSettings {
   health: PollState<HealthResponse>;
   syncStatus: PollState<SyncStatusResponse>;
   indexStatus: PollState<IndexStatusResponse>;
@@ -121,7 +121,7 @@ export interface UseAdmin {
   indexRebuild: ActionState;
 }
 
-export function useAdmin(): UseAdmin {
+export function useSettings(): UseSettings {
   const health = usePoll(api.getHealth, 15_000);
   const syncStatus = usePoll(api.getSyncStatus, 8_000);
   const indexStatus = usePoll(api.getIndexStatus, 8_000);

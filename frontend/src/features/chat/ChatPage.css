@@ -12,7 +12,7 @@
   padding: var(--space-3) var(--space-5);
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-surface);
-  background-image: url('/header-bg.webp');
+  background-image: url("/header-bg.webp");
   background-size: 100% auto;
   background-repeat: no-repeat;
   background-position: left top;
@@ -21,7 +21,7 @@
 }
 
 .chat-page__header::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: var(--header-bg-overlay);
@@ -45,7 +45,7 @@
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.chat-page__debug-toggle {
+.chat-page__toggle {
   font-size: var(--text-xs);
   color: var(--text-2);
   display: flex;
@@ -56,12 +56,21 @@
   transition: color var(--transition-fast);
 }
 
-.chat-page__debug-toggle:hover {
+.chat-page__toggle:hover {
   color: var(--text-1);
 }
 
-.chat-page__debug-toggle input {
+.chat-page__toggle input {
   accent-color: var(--accent);
+}
+
+.chat-page__toggle--thinking {
+  color: var(--accent);
+  font-weight: var(--weight-semibold);
+}
+
+.chat-page__toggle--thinking:hover {
+  color: var(--accent-hover);
 }
 
 .chat-page__clear {

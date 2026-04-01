@@ -2,7 +2,7 @@
    KMSBot — index.css
    Design tokens: ./theme.css  |  swap @import to change skin
    ============================================================ */
-@import './theme.css';
+@import "./theme.css";
 
 /* ---- Reset ---- */
 *,
@@ -177,7 +177,9 @@ body {
   color: var(--text-3);
   text-decoration: none;
   flex-shrink: 0;
-  transition: color var(--transition-fast), background var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .sidebar__gear-link:hover {

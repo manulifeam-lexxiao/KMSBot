@@ -15,6 +15,7 @@ class CleanedDocument(StrictSchemaModel):
     title: str = Field(min_length=1)
     sections: list[CleanedSection]
     plain_text: str = Field(min_length=1)
+    labels: list[str] = Field(default_factory=list)
 
 
 class ChunkRecord(StrictSchemaModel):
@@ -26,3 +27,4 @@ class ChunkRecord(StrictSchemaModel):
     url: AnyUrl
     tags: list[str]
     pipeline_version: int = Field(ge=1)
+    labels: list[str] = Field(default_factory=list)

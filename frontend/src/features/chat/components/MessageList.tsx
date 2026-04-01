@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "../../../types/query";
 import { AnswerMessage } from "./AnswerMessage";
+import { ThinkingProgress } from "./ThinkingProgress";
 import "./MessageList.css";
 
 interface MessageListProps {
@@ -31,13 +32,15 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
         <div key={msg.id} className={`message-list__bubble message-list__bubble--${msg.role}`}>
           {msg.role === "user" ? (
             <div className="message-list__user-text">{msg.content}</div>
+          ) : msg.thinkingStage ? (
+            <ThinkingProgress event={msg.thinkingStage} />
           ) : (
             <AnswerMessage content={msg.content} response={msg.response} error={msg.error} />
           )}
         </div>
       ))}
 
-      {isLoading && (
+      {isLoading && !messages.some((m) => m.thinkingStage) && (
         <div className="message-list__bubble message-list__bubble--assistant">
           <div className="message-list__loading">
             <span className="message-list__dot" />

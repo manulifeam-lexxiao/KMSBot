@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { ProviderSelector } from "../../features/admin/ProviderSelector";
+import { ProviderSelector } from "../../features/settings/ProviderSelector";
 import * as settingsApi from "../../services/api/settingsApi";
 
 vi.mock("../../services/api/settingsApi");

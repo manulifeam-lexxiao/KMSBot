@@ -10,7 +10,7 @@ from kms_bot.core.settings import ConfluenceSettings
 
 logger = logging.getLogger(__name__)
 
-_EXPAND = "version,body.storage,_links"
+_EXPAND = "version,body.storage,metadata.labels,_links"
 
 
 @dataclass(slots=True)
@@ -23,6 +23,7 @@ class ConfluencePage:
     last_updated: str
     body_html: str
     url: str
+    labels: list[str]
 
 
 class ConfluenceClient:
@@ -51,6 +52,8 @@ class ConfluenceClient:
 
     def _parse_page(self, result: dict[str, Any]) -> ConfluencePage:
         version_info = result.get("version", {})
+        label_results = result.get("metadata", {}).get("labels", {}).get("results", [])
+        labels = [lbl["name"] for lbl in label_results if isinstance(lbl, dict) and "name" in lbl]
         return ConfluencePage(
             page_id=str(result["id"]),
             title=result["title"],
@@ -58,6 +61,7 @@ class ConfluenceClient:
             last_updated=version_info.get("when", ""),
             body_html=result.get("body", {}).get("storage", {}).get("value", ""),
             url=self._page_url(result),
+            labels=labels,
         )
 
     async def fetch_all_pages(self) -> list[ConfluencePage]:

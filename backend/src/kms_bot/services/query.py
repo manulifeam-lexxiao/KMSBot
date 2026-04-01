@@ -40,10 +40,13 @@ Context text format (LLM input)
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from collections import Counter
 from difflib import SequenceMatcher
+from pathlib import Path
+from typing import AsyncIterator
 
 from kms_bot.core.settings import ApplicationSettings
 from kms_bot.schemas.query import (
@@ -56,6 +59,8 @@ from kms_bot.schemas.query import (
     SearchResultHit,
 )
 from kms_bot.services.interfaces import AnswerService, QueryService, SearchService
+from kms_bot.services.query_planner import QueryPlan, QueryPlannerService
+from kms_bot.services.title_search import TitleSearchService
 
 logger = logging.getLogger(__name__)
 
@@ -167,8 +172,9 @@ def extract_related_documents(chunks: list[SearchResultHit]) -> list[RelatedDocu
 class QueryOrchestratorService(QueryService):
     """Production implementation of the query orchestration layer.
 
-    Depends only on ``SearchService`` and ``AnswerService`` interfaces –
-    no Azure SDK imports leak into this module.
+    Supports two modes:
+    - Standard: AI planning → title search → return relevant articles
+    - THINKING: AI planning → title search → deep read → AI summary (via SSE)
     """
 
     def __init__(
@@ -177,17 +183,46 @@ class QueryOrchestratorService(QueryService):
         settings: ApplicationSettings,
         search_service: SearchService,
         answer_service: AnswerService,
+        query_planner: QueryPlannerService | None = None,
+        title_search: TitleSearchService | None = None,
     ) -> None:
         self._settings = settings
         self._search = search_service
         self._answer = answer_service
+        self._planner = query_planner
+        self._title_search = title_search
 
     async def answer_query(self, request: QueryRequest) -> QueryResponse:
         normalized = normalize_query(request.query)
-        logger.info("Query received – normalized: %r  top_k: %d", normalized, request.top_k)
+        mode = "thinking" if request.thinking else "standard"
+        logger.info(
+            "Query received – normalized: %r  top_k: %d  mode: %s", normalized, request.top_k, mode
+        )
 
+        # ---- AI 查询规划 ----
+        plan: QueryPlan | None = None
+        if self._planner:
+            plan = await self._planner.plan(request.query, mode=mode)
+            logger.info("Query plan: %s", plan)
+            search_query = " ".join(plan.all_search_terms) if plan.all_search_terms else normalized
+        else:
+            search_query = normalized
+
+        if request.thinking and self._title_search:
+            return await self._thinking_mode(request, normalized, search_query, plan)
+
+        return await self._standard_mode(request, normalized, search_query, plan)
+
+    async def _standard_mode(
+        self,
+        request: QueryRequest,
+        normalized: str,
+        search_query: str,
+        plan: QueryPlan | None,
+    ) -> QueryResponse:
+        """标准模式：FTS 搜索 chunks → AI 生成答案。"""
         # ---- search ----
-        raw_hits = await self._search.search(query=normalized, top_k=request.top_k)
+        raw_hits = await self._search.search(query=search_query, top_k=request.top_k)
         logger.debug("Search returned %d raw hits", len(raw_hits))
 
         # ---- post-processing pipeline ----
@@ -198,12 +233,6 @@ class QueryOrchestratorService(QueryService):
         selected = cap_per_document(
             deduped,
             max_per_doc=self._settings.query.max_chunks_per_doc,
-        )
-        logger.debug(
-            "After dedup/cap: %d → %d → %d",
-            len(raw_hits),
-            len(deduped),
-            len(selected),
         )
 
         # ---- context assembly ----
@@ -231,3 +260,184 @@ class QueryOrchestratorService(QueryService):
             related_documents=extract_related_documents(selected),
             debug=debug,
         )
+
+    async def _thinking_mode(
+        self,
+        request: QueryRequest,
+        normalized: str,
+        search_query: str,
+        plan: QueryPlan | None,
+    ) -> QueryResponse:
+        """THINKING 深度模式：标题搜索 → 加载全文 → AI 深度分析。"""
+        assert self._title_search is not None
+
+        max_articles = self._settings.query.thinking_max_articles
+
+        # 1. 标题搜索找到候选文章
+        title_hits = await self._title_search.search(query=search_query, top_k=max_articles * 3)
+        logger.info("THINKING: found %d candidate articles", len(title_hits))
+
+        # 2. 取 top N 篇文章的全文 chunks
+        selected_page_ids = [h.page_id for h in title_hits[:max_articles]]
+        all_chunks = await self._load_chunks_for_pages(selected_page_ids)
+        logger.info(
+            "THINKING: loaded %d chunks from %d articles", len(all_chunks), len(selected_page_ids)
+        )
+
+        # 3. 构建 SearchResultHit 列表
+        selected: list[SearchResultHit] = []
+        for chunk in all_chunks:
+            selected.append(
+                SearchResultHit(
+                    chunk_id=chunk.chunk_id,
+                    doc_id=chunk.doc_id,
+                    title=chunk.title,
+                    section=chunk.section,
+                    content=chunk.content,
+                    url=chunk.url,
+                    tags=chunk.tags,
+                    pipeline_version=chunk.pipeline_version,
+                    labels=chunk.labels,
+                    score=1.0,
+                )
+            )
+
+        # 4. 组装 context 并生成深度答案
+        context_text = assemble_context(selected)
+
+        payload = AnswerGeneratorInput(
+            query=request.query,
+            normalized_query=normalized,
+            prompt_template_path=self._settings.prompts.query_answering,
+            selected_chunks=selected,
+            context_text=context_text,
+            include_debug=request.include_debug,
+        )
+        answer = await self._answer.generate_answer(payload)
+
+        debug = QueryDebugInfo(
+            normalized_query=normalized,
+            selected_chunks=selected if request.include_debug else [],
+        )
+        return QueryResponse(
+            answer=answer,
+            sources=build_sources(selected),
+            related_documents=extract_related_documents(selected),
+            debug=debug,
+        )
+
+    async def _load_chunks_for_pages(self, page_ids: list[str]) -> list:
+        """从磁盘加载指定 page_id 的所有 chunks。"""
+        from kms_bot.schemas.documents import ChunkRecord
+
+        chunks_dir = self._settings.resolve_path(self._settings.storage.chunks_dir)
+        all_chunks: list[ChunkRecord] = []
+        for page_id in page_ids:
+            chunk_file = chunks_dir / f"{page_id}.chunks.json"
+            if chunk_file.exists():
+                try:
+                    raw = json.loads(chunk_file.read_text(encoding="utf-8"))
+                    for item in raw:
+                        all_chunks.append(ChunkRecord.model_validate(item))
+                except Exception as exc:
+                    logger.warning("Failed to load chunks for %s: %s", page_id, exc)
+        return all_chunks
+
+    async def answer_query_streaming(self, request: QueryRequest) -> AsyncIterator[dict]:
+        """THINKING 模式的 SSE 流式响应生成器。"""
+        normalized = normalize_query(request.query)
+
+        # Stage 1: Planning
+        yield {"stage": "planning", "message": "正在分析问题..."}
+
+        plan: QueryPlan | None = None
+        if self._planner:
+            plan = await self._planner.plan(request.query, mode="thinking")
+            search_query = " ".join(plan.all_search_terms) if plan.all_search_terms else normalized
+        else:
+            search_query = normalized
+
+        # Stage 2: Searching
+        yield {"stage": "searching", "message": "正在搜索相关文章..."}
+
+        max_articles = self._settings.query.thinking_max_articles
+        if self._title_search:
+            title_hits = await self._title_search.search(query=search_query, top_k=max_articles * 3)
+        else:
+            title_hits = []
+
+        selected_page_ids = [h.page_id for h in title_hits[:max_articles]]
+        articles_found = len(title_hits)
+        reading_count = len(selected_page_ids)
+
+        yield {
+            "stage": "searching",
+            "message": f"找到 {articles_found} 篇相关文章，将深度阅读 {reading_count} 篇",
+            "articles_found": articles_found,
+            "reading": reading_count,
+        }
+
+        # Stage 3: Reading
+        from kms_bot.schemas.documents import ChunkRecord
+
+        chunks_dir = self._settings.resolve_path(self._settings.storage.chunks_dir)
+        all_chunks: list[ChunkRecord] = []
+        for idx, page_id in enumerate(selected_page_ids, 1):
+            yield {
+                "stage": "reading",
+                "message": f"正在阅读第 {idx}/{reading_count} 篇文章...",
+                "current": idx,
+                "total": reading_count,
+            }
+            chunk_file = chunks_dir / f"{page_id}.chunks.json"
+            if chunk_file.exists():
+                try:
+                    raw = json.loads(chunk_file.read_text(encoding="utf-8"))
+                    for item in raw:
+                        all_chunks.append(ChunkRecord.model_validate(item))
+                except Exception:
+                    pass
+
+        # Stage 4: Summarizing
+        yield {"stage": "summarizing", "message": "正在生成总结..."}
+
+        selected: list[SearchResultHit] = []
+        for chunk in all_chunks:
+            selected.append(
+                SearchResultHit(
+                    chunk_id=chunk.chunk_id,
+                    doc_id=chunk.doc_id,
+                    title=chunk.title,
+                    section=chunk.section,
+                    content=chunk.content,
+                    url=chunk.url,
+                    tags=chunk.tags,
+                    pipeline_version=chunk.pipeline_version,
+                    labels=chunk.labels,
+                    score=1.0,
+                )
+            )
+
+        context_text = assemble_context(selected)
+        payload = AnswerGeneratorInput(
+            query=request.query,
+            normalized_query=normalized,
+            prompt_template_path=self._settings.prompts.query_answering,
+            selected_chunks=selected,
+            context_text=context_text,
+            include_debug=request.include_debug,
+        )
+        answer = await self._answer.generate_answer(payload)
+
+        debug = QueryDebugInfo(
+            normalized_query=normalized,
+            selected_chunks=selected if request.include_debug else [],
+        )
+        response = QueryResponse(
+            answer=answer,
+            sources=build_sources(selected),
+            related_documents=extract_related_documents(selected),
+            debug=debug,
+        )
+
+        yield {"stage": "done", "data": response.model_dump(mode="json")}

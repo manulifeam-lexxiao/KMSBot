@@ -13,6 +13,9 @@ class SQLiteDatabase:
     def __init__(self, settings: ApplicationSettings) -> None:
         self._settings = settings
         self._bootstrap_sql_path = settings.resolve_path("config/contracts/sqlite/001_registry.sql")
+        self._migration_paths = [
+            settings.resolve_path("config/contracts/sqlite/002_add_labels_and_tokens.sql"),
+        ]
 
     @property
     def database_url(self) -> str:
@@ -44,6 +47,36 @@ class SQLiteDatabase:
         schema_sql = self._bootstrap_sql_path.read_text(encoding="utf-8")
         with self.connection() as connection:
             connection.executescript(schema_sql)
+            connection.commit()
+
+        # 运行增量迁移（幂等：ALTER 失败时跳过已存在的列）
+        for migration_path in self._migration_paths:
+            if migration_path.exists():
+                self._apply_migration(migration_path)
+
+    def _apply_migration(self, migration_path: Path) -> None:
+        """逐条执行迁移SQL，跳过已完成的DDL语句（如重复的ALTER TABLE）。"""
+        sql = migration_path.read_text(encoding="utf-8")
+        with self.connection() as connection:
+            for statement in sql.split(";"):
+                # 去除注释行后判断是否有实际 SQL
+                lines = [
+                    line
+                    for line in statement.splitlines()
+                    if line.strip() and not line.strip().startswith("--")
+                ]
+                actual_sql = "\n".join(lines).strip()
+                if not actual_sql:
+                    continue
+                try:
+                    connection.execute(statement)
+                except sqlite3.OperationalError as exc:
+                    # 跳过 "duplicate column" 等幂等错误
+                    if "duplicate column" in str(exc).lower():
+                        continue
+                    if "already exists" in str(exc).lower():
+                        continue
+                    raise
             connection.commit()
 
     @contextmanager

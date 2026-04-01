@@ -4,6 +4,7 @@ from fastapi import Depends, Request
 
 from kms_bot.core.container import ServiceContainer
 from kms_bot.core.settings import ApplicationSettings
+from kms_bot.repositories.token_usage import TokenUsageRepository
 from kms_bot.services.answer_router import ProviderAnswerRouter
 from kms_bot.services.interfaces import (
     AnswerService,
@@ -49,3 +50,9 @@ def get_query_service(container: ServiceContainer = Depends(get_container)) -> Q
 
 def get_answer_router(container: ServiceContainer = Depends(get_container)) -> ProviderAnswerRouter:
     return container.answer_router
+
+
+def get_token_usage_repository(
+    container: ServiceContainer = Depends(get_container),
+) -> TokenUsageRepository:
+    return container.token_usage_repository

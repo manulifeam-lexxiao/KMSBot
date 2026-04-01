@@ -10,6 +10,7 @@ class QueryRequest(StrictSchemaModel):
     query: str = Field(min_length=1)
     top_k: int = Field(ge=1, le=10)
     include_debug: bool
+    thinking: bool = False
 
 
 class SearchResultHit(ChunkRecord):

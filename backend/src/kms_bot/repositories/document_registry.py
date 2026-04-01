@@ -7,7 +7,7 @@ from kms_bot.schemas.registry import DocumentRegistryRecord
 class DocumentRegistryRepository(BaseRepository):
     _SELECT_COLUMNS = (
         "page_id, title, source_version, last_updated, raw_hash, chunk_count, "
-        "pipeline_version, index_status, last_sync_time, last_index_time, error_message"
+        "pipeline_version, index_status, last_sync_time, last_index_time, error_message, labels"
     )
 
     def count_all(self) -> int:
@@ -15,6 +15,10 @@ class DocumentRegistryRepository(BaseRepository):
         if row is None:
             return 0
         return int(row["document_count"])
+
+    def delete_all(self) -> None:
+        """删除 document_registry 中所有记录（用于 Full Sync 清空）。"""
+        self.execute("DELETE FROM document_registry")
 
     def get_by_page_id(self, page_id: str) -> DocumentRegistryRecord | None:
         row = self.fetch_one(
@@ -83,14 +87,15 @@ class DocumentRegistryRepository(BaseRepository):
         pipeline_version: int,
         last_sync_time: str,
         error_message: str | None,
+        labels: str = "[]",
     ) -> None:
         self.execute(
             """
             INSERT INTO document_registry (
                 page_id, title, source_version, last_updated, raw_hash,
                 chunk_count, pipeline_version, index_status,
-                last_sync_time, last_index_time, error_message
-            ) VALUES (?, ?, ?, ?, ?, 0, ?, 'not_indexed', ?, NULL, ?)
+                last_sync_time, last_index_time, error_message, labels
+            ) VALUES (?, ?, ?, ?, ?, 0, ?, 'not_indexed', ?, NULL, ?, ?)
             ON CONFLICT(page_id) DO UPDATE SET
                 title            = excluded.title,
                 source_version   = excluded.source_version,
@@ -102,7 +107,8 @@ class DocumentRegistryRepository(BaseRepository):
                                      ELSE 'stale'
                                    END,
                 last_sync_time   = excluded.last_sync_time,
-                error_message    = excluded.error_message
+                error_message    = excluded.error_message,
+                labels           = excluded.labels
             """,
             (
                 page_id,
@@ -113,5 +119,6 @@ class DocumentRegistryRepository(BaseRepository):
                 pipeline_version,
                 last_sync_time,
                 error_message,
+                labels,
             ),
         )

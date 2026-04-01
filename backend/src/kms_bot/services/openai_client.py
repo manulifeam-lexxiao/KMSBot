@@ -36,6 +36,7 @@ class ChatCompletionResult:
 @dataclass
 class _TokenCache:
     """简单的内存 token 缓存，提前 60 秒刷新。"""
+
     access_token: str = ""
     expires_at: float = 0.0
 
@@ -82,8 +83,7 @@ class AzureOpenAIClient:
         self._client_secret = client_secret
         self._scope = scope
         self._token_url = (
-            f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-            if tenant_id else ""
+            f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token" if tenant_id else ""
         )
         self._token_cache = _TokenCache()
 
@@ -188,7 +188,6 @@ class AzureOpenAIClient:
             result.completion_tokens,
         )
         return result
-
 
     async def close(self) -> None:
         await self._client.aclose()

@@ -3,7 +3,7 @@ import type {
   IndexStatusResponse,
   OperationAcceptedResponse,
   SyncStatusResponse,
-} from "../../types/admin";
+} from "../../types/settings";
 
 const MOCK_DELAY_MS = 400;
 

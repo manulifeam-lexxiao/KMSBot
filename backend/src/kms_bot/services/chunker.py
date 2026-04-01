@@ -181,6 +181,7 @@ def _build_chunks_for_section(
     section: CleanedSection,
     url: str,
     pipeline_version: int,
+    labels: list[str] | None = None,
 ) -> list[ChunkRecord]:
     """Produce one or more ``ChunkRecord`` instances for a single section."""
     parts = _split_section(section.content)
@@ -200,6 +201,7 @@ def _build_chunks_for_section(
             url=url,
             tags=tags,
             pipeline_version=pipeline_version,
+            labels=labels or [],
         )
         for idx, part in enumerate(parts, start=1)
     ]
@@ -235,6 +237,7 @@ class ConfluenceChunkService(ChunkService):
                 section=section,
                 url=url,
                 pipeline_version=self._pipeline_version,
+                labels=document.labels,
             )
             chunks.extend(section_chunks)
         return chunks

@@ -1,0 +1,76 @@
+.thinking-progress {
+  padding: var(--space-4);
+}
+
+.thinking-progress__stages {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.thinking-progress__stage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  transition: color var(--transition-fast);
+}
+
+.thinking-progress__stage--active {
+  color: var(--accent);
+  font-weight: var(--weight-semibold);
+}
+
+.thinking-progress__stage--done {
+  color: var(--text-2);
+}
+
+.thinking-progress__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-subtle);
+  transition: background var(--transition-fast);
+}
+
+.thinking-progress__stage--active .thinking-progress__dot {
+  background: var(--accent);
+  animation: thinking-pulse 1.2s ease-in-out infinite;
+}
+
+.thinking-progress__stage--done .thinking-progress__dot {
+  background: var(--text-2);
+}
+
+.thinking-progress__message {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  min-height: 1.4em;
+}
+
+.thinking-progress__bar-wrap {
+  margin-top: var(--space-2);
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.thinking-progress__bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+@keyframes thinking-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}

@@ -118,6 +118,19 @@ class ConfluenceSyncService(SyncService):
 
     # ── background sync runner ────────────────────────────────
 
+    def _clear_all_data(self) -> None:
+        """Full Sync 前清空所有现有数据（document_registry + 文件系统）。"""
+        logger.info("full_sync_clearing_all_data")
+        self._registry.delete_all()
+
+        for directory_attr in ("raw_dir", "cleaned_dir", "chunks_dir"):
+            dir_path = self._settings.resolve_path(getattr(self._settings.storage, directory_attr))
+            if dir_path.exists():
+                for file_path in dir_path.iterdir():
+                    if file_path.is_file():
+                        file_path.unlink()
+        logger.info("full_sync_data_cleared")
+
     async def _run_sync(self, *, mode: str, job_id: str) -> None:
         async with self._lock:
             self._state.status = "running"
@@ -129,6 +142,10 @@ class ConfluenceSyncService(SyncService):
             self._state.error_message = None
 
             try:
+                # Full sync: 先清空所有现有数据
+                if mode == "full":
+                    self._clear_all_data()
+
                 pages = await self._fetch_pages(mode)
 
                 for page in pages:
@@ -180,6 +197,7 @@ class ConfluenceSyncService(SyncService):
         try:
             raw_hash = _compute_hash(page.body_html)
             now_iso = utcnow().isoformat()
+            labels_json = json.dumps(page.labels, ensure_ascii=False)
 
             existing = self._registry.get_by_page_id(page.page_id)
             if (
@@ -201,6 +219,7 @@ class ConfluenceSyncService(SyncService):
                 pipeline_version=self._settings.app.pipeline_version,
                 last_sync_time=now_iso,
                 error_message=None,
+                labels=labels_json,
             )
             self._state.changed_pages += 1
             logger.info("page_synced", extra={"page_id": page.page_id, "title": page.title})
@@ -235,6 +254,7 @@ class ConfluenceSyncService(SyncService):
             "raw_hash": raw_hash,
             "sync_time": sync_time,
             "pipeline_version": self._settings.app.pipeline_version,
+            "labels": page.labels,
         }
         meta_path = self._raw_dir / f"{page.page_id}.meta.json"
         meta_path.write_text(

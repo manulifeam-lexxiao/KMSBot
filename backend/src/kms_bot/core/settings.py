@@ -86,6 +86,7 @@ ENVIRONMENT_OVERRIDES: tuple[tuple[str, tuple[str, ...], ConfigValueParser], ...
     ("KMSBOT_GITHUB_MODELS_MODEL_NAME", ("github_models", "model_name"), str),
     ("KMSBOT_QUERY_TOP_K", ("query", "top_k"), int),
     ("KMSBOT_QUERY_INCLUDE_DEBUG", ("query", "include_debug"), _parse_bool),
+    ("KMSBOT_QUERY_THINKING_MAX_ARTICLES", ("query", "thinking_max_articles"), int),
     ("KMSBOT_PROMPT_QUERY_ANSWERING", ("prompts", "query_answering"), str),
     ("KMSBOT_PROMPT_QUERY_REWRITE", ("prompts", "query_rewrite"), str),
 )
@@ -190,11 +191,13 @@ class QuerySettings(StrictModel):
     include_debug: bool = False
     max_chunks_per_doc: int = Field(default=3, ge=1, le=10)
     similarity_threshold: float = Field(default=0.85, ge=0.0, le=1.0)
+    thinking_max_articles: int = Field(default=5, ge=1, le=50)
 
 
 class PromptSettings(StrictModel):
     query_answering: str = "prompts/query_answering/default.md"
     query_rewrite: str = "prompts/query_rewrite/default.md"
+    query_planning: str = "prompts/query_planning/default.md"
 
 
 class ApplicationSettings(StrictModel):

@@ -1,4 +1,4 @@
-import type { OperationAcceptedResponse } from "../../types/admin";
+import type { OperationAcceptedResponse } from "../../types/settings";
 
 /** Shared shape passed to card components for action buttons */
 export interface ActionState {

@@ -19,6 +19,8 @@ from functools import lru_cache
 from pathlib import Path
 
 from kms_bot.core.settings import ApplicationSettings
+from kms_bot.core.utils import utcnow
+from kms_bot.repositories.token_usage import TokenUsageRepository
 from kms_bot.schemas.query import AnswerGeneratorInput
 from kms_bot.services.github_models_client import GithubModelsClient
 from kms_bot.services.interfaces import AnswerService
@@ -59,9 +61,11 @@ class AzureOpenAIAnswerService(AnswerService):
         *,
         settings: ApplicationSettings,
         openai_client: AzureOpenAIClient,
+        token_usage_repository: TokenUsageRepository | None = None,
     ) -> None:
         self._settings = settings
         self._client = openai_client
+        self._token_repo = token_usage_repository
 
     async def generate_answer(self, payload: AnswerGeneratorInput) -> str:
         # ---- fast-path: no context ----
@@ -101,6 +105,17 @@ class AzureOpenAIAnswerService(AnswerService):
             result.prompt_tokens,
             result.completion_tokens,
         )
+        if self._token_repo:
+            self._token_repo.record(
+                timestamp=utcnow().isoformat(),
+                query=payload.query,
+                mode="standard",
+                provider="azure_openai",
+                stage="answering",
+                prompt_tokens=result.prompt_tokens,
+                completion_tokens=result.completion_tokens,
+                model=result.model,
+            )
         return answer
 
 
@@ -112,9 +127,11 @@ class GithubModelsAnswerService(AnswerService):
         *,
         settings: ApplicationSettings,
         github_client: GithubModelsClient,
+        token_usage_repository: TokenUsageRepository | None = None,
     ) -> None:
         self._settings = settings
         self._client = github_client
+        self._token_repo = token_usage_repository
 
     async def generate_answer(self, payload: AnswerGeneratorInput) -> str:
         if not payload.context_text.strip():
@@ -151,4 +168,15 @@ class GithubModelsAnswerService(AnswerService):
             result.prompt_tokens,
             result.completion_tokens,
         )
+        if self._token_repo:
+            self._token_repo.record(
+                timestamp=utcnow().isoformat(),
+                query=payload.query,
+                mode="standard",
+                provider="github_models",
+                stage="answering",
+                prompt_tokens=result.prompt_tokens,
+                completion_tokens=result.completion_tokens,
+                model=result.model,
+            )
         return answer

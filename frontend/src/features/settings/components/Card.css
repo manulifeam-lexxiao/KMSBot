@@ -1,4 +1,4 @@
-.admin-card {
+.settings-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
@@ -8,7 +8,7 @@
 }
 
 /* ---- Running progress bar ---- */
-.admin-card__progress {
+.settings-card__progress {
   position: absolute;
   top: 0;
   left: 0;
@@ -19,7 +19,7 @@
   z-index: 1;
 }
 
-.admin-card__progress-bar {
+.settings-card__progress-bar {
   height: 100%;
   width: 40%;
   background: var(--accent);
@@ -41,11 +41,11 @@
   }
 }
 
-.admin-card:hover {
+.settings-card:hover {
   border-color: var(--border-strong);
 }
 
-.admin-card__title {
+.settings-card__title {
   margin: 0;
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border-subtle);
@@ -56,7 +56,7 @@
   letter-spacing: -0.01em;
 }
 
-.admin-card__loading {
+.settings-card__loading {
   padding: var(--space-5);
   color: var(--text-2);
   font-style: italic;
@@ -64,27 +64,27 @@
   font-size: var(--text-sm);
 }
 
-.admin-card__error {
+.settings-card__error {
   padding: var(--space-3) var(--space-5);
   color: var(--color-danger);
   margin: 0;
   font-size: var(--text-sm);
 }
 
-.admin-card__body {
+.settings-card__body {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-5);
 }
 
-.admin-card__row {
+.settings-card__row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
 }
 
-.admin-card__label {
+.settings-card__label {
   min-width: 160px;
   font-weight: var(--weight-medium);
   font-size: var(--text-sm);
@@ -92,12 +92,12 @@
   flex-shrink: 0;
 }
 
-.admin-card__error-text {
+.settings-card__error-text {
   color: var(--color-danger);
   font-size: var(--text-sm);
 }
 
-.admin-card__actions {
+.settings-card__actions {
   padding: 0 var(--space-5) var(--space-5);
   display: flex;
   gap: var(--space-3);

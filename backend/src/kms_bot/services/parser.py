@@ -28,7 +28,14 @@ class ConfluenceParseService(ParseService):
 
     # ── ParseService interface ────────────────────────────────
 
-    async def parse_document(self, *, doc_id: str, title: str, raw_content: str) -> CleanedDocument:
+    async def parse_document(
+        self,
+        *,
+        doc_id: str,
+        title: str,
+        raw_content: str,
+        labels: list[str] | None = None,
+    ) -> CleanedDocument:
         """Parse a single document from raw HTML content."""
         sections, plain_text = clean_html(raw_content)
 
@@ -48,6 +55,7 @@ class ConfluenceParseService(ParseService):
             title=title,
             sections=cleaned_sections,
             plain_text=plain_text,
+            labels=labels or [],
         )
 
     # ── batch processing (independent of sync internals) ──────
@@ -91,11 +99,17 @@ class ConfluenceParseService(ParseService):
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         page_id = meta["page_id"]
         title = meta["title"]
+        labels = meta.get("labels", [])
 
         html_path = meta_path.parent / f"{page_id}.html"
         raw_html = html_path.read_text(encoding="utf-8")
 
-        return await self.parse_document(doc_id=page_id, title=title, raw_content=raw_html)
+        return await self.parse_document(
+            doc_id=page_id,
+            title=title,
+            raw_content=raw_html,
+            labels=labels,
+        )
 
     def _persist_cleaned(self, document: CleanedDocument) -> None:
         """Write cleaned document JSON to the cleaned directory."""

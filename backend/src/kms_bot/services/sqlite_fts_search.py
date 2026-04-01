@@ -41,6 +41,17 @@ CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
 
 _DROP_FTS_TABLE = "DROP TABLE IF EXISTS chunks_fts;"
 
+_DROP_TITLES_FTS_TABLE = "DROP TABLE IF EXISTS titles_fts;"
+
+_CREATE_TITLES_FTS_TABLE = """
+CREATE VIRTUAL TABLE IF NOT EXISTS titles_fts USING fts5(
+    page_id UNINDEXED,
+    title,
+    labels,
+    tokenize='unicode61 remove_diacritics 2'
+);
+"""
+
 _INSERT_CHUNK = """
 INSERT INTO chunks_fts
     (chunk_id, doc_id, title, section, content, url, tags_json, pipeline_version)
@@ -211,7 +222,10 @@ class SQLiteFTSSearchService(SearchService):
                 # 3. 批量写入
                 await asyncio.to_thread(self._insert_chunks, all_chunks)
 
-                # 4. 更新注册表状态
+                # 4. 填充 titles_fts（从 document_registry 读取）
+                await asyncio.to_thread(self._populate_titles_fts)
+
+                # 5. 更新注册表状态
                 now = utcnow().isoformat()
                 doc_ids = {c.doc_id for c in all_chunks}
                 for doc_id in doc_ids:
@@ -248,7 +262,10 @@ class SQLiteFTSSearchService(SearchService):
 
     def _reset_fts_table(self) -> None:
         with self._database.connection() as conn:
-            conn.executescript(f"{_DROP_FTS_TABLE}\n{_CREATE_FTS_TABLE}")
+            conn.executescript(
+                f"{_DROP_FTS_TABLE}\n{_CREATE_FTS_TABLE}\n"
+                f"{_DROP_TITLES_FTS_TABLE}\n{_CREATE_TITLES_FTS_TABLE}"
+            )
             conn.commit()
 
     def _insert_chunks(self, chunks: list[ChunkRecord]) -> None:
@@ -268,6 +285,21 @@ class SQLiteFTSSearchService(SearchService):
         with self._database.connection() as conn:
             conn.executemany(_INSERT_CHUNK, rows)
             conn.commit()
+
+    def _populate_titles_fts(self) -> None:
+        """从 document_registry 填充 titles_fts 虚拟表。"""
+        rows = self._database.fetch_all("SELECT page_id, title, labels FROM document_registry")
+        if not rows:
+            logger.info("titles_fts_skip_empty_registry")
+            return
+        insert_data = [(row["page_id"], row["title"], row["labels"] or "[]") for row in rows]
+        with self._database.connection() as conn:
+            conn.executemany(
+                "INSERT INTO titles_fts (page_id, title, labels) VALUES (?, ?, ?)",
+                insert_data,
+            )
+            conn.commit()
+        logger.info("titles_fts_populated", extra={"count": len(insert_data)})
 
     def _load_all_chunks(self) -> list[ChunkRecord]:
         chunks: list[ChunkRecord] = []

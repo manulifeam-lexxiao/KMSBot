@@ -3,6 +3,19 @@ export interface QueryRequest {
   query: string;
   top_k: number;
   include_debug: boolean;
+  thinking: boolean;
+}
+
+/** SSE event emitted during THINKING mode streaming */
+export interface ThinkingEvent {
+  stage: "planning" | "searching" | "reading" | "summarizing" | "done";
+  message?: string;
+  articles_found?: number;
+  reading?: number;
+  current?: number;
+  total?: number;
+  /** Present only when stage === "done" */
+  data?: QueryResponse;
 }
 
 /** Matches OpenAPI QuerySource */
@@ -65,4 +78,6 @@ export interface ChatMessage {
   response?: QueryResponse;
   /** Present when the query failed */
   error?: string;
+  /** Present during THINKING mode streaming */
+  thinkingStage?: ThinkingEvent;
 }

@@ -6,7 +6,7 @@ import {
   triggerIncrementalSync,
   getIndexStatus,
   triggerIndexRebuild,
-} from "../../services/api/adminApi";
+} from "../../services/api/operationsApi";
 
 afterEach(() => vi.restoreAllMocks());
 

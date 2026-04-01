@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
-import type { ChatMessage, QueryRequest, QueryResponse } from "../types/query";
-import { postQuery } from "../services/api/queryApi";
+import type { ChatMessage, QueryRequest, QueryResponse, ThinkingEvent } from "../types/query";
+import { postQuery, postQueryStreaming } from "../services/api/queryApi";
 import { postQueryMock } from "../services/api/mock";
 
 const useMock = import.meta.env.VITE_MOCK_API === "true";
@@ -17,7 +17,7 @@ export interface UseQueryChat {
   clearMessages: () => void;
 }
 
-export function useQueryChat(includeDebug = false): UseQueryChat {
+export function useQueryChat(includeDebug = false, thinking = false): UseQueryChat {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -45,41 +45,108 @@ export function useQueryChat(includeDebug = false): UseQueryChat {
         query: trimmed,
         top_k: 5,
         include_debug: includeDebug,
+        thinking,
       };
 
-      const apiCall = useMock ? postQueryMock : postQuery;
+      if (thinking && !useMock) {
+        // THINKING 模式：SSE 流式处理
+        const assistantId = makeId();
 
-      apiCall(req)
-        .then((resp: QueryResponse) => {
-          if (controller.signal.aborted) return;
-          const assistantMsg: ChatMessage = {
-            id: makeId(),
-            role: "assistant",
-            content: resp.answer,
-            timestamp: new Date(),
-            response: resp,
-          };
-          setMessages((prev) => [...prev, assistantMsg]);
-        })
-        .catch((err: unknown) => {
-          if (controller.signal.aborted) return;
-          const errorMessage = err instanceof Error ? err.message : "Unknown error";
-          const errMsg: ChatMessage = {
-            id: makeId(),
-            role: "assistant",
-            content: "Sorry, something went wrong.",
-            timestamp: new Date(),
-            error: errorMessage,
-          };
-          setMessages((prev) => [...prev, errMsg]);
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) {
+        // 先添加一个占位消息
+        const placeholderMsg: ChatMessage = {
+          id: assistantId,
+          role: "assistant",
+          content: "",
+          timestamp: new Date(),
+          thinkingStage: { stage: "planning", message: "正在分析问题..." },
+        };
+        setMessages((prev) => [...prev, placeholderMsg]);
+
+        postQueryStreaming(
+          req,
+          (event: ThinkingEvent) => {
+            if (controller.signal.aborted) return;
+            if (event.stage === "done" && event.data) {
+              // 最终结果：替换占位消息
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantId
+                    ? {
+                        ...m,
+                        content: event.data!.answer,
+                        response: event.data!,
+                        thinkingStage: undefined,
+                      }
+                    : m,
+                ),
+              );
+            } else {
+              // 中间进度：更新 thinkingStage
+              setMessages((prev) =>
+                prev.map((m) => (m.id === assistantId ? { ...m, thinkingStage: event } : m)),
+              );
+            }
+          },
+          controller.signal,
+        )
+          .then(() => {
+            if (!controller.signal.aborted) {
+              setIsLoading(false);
+            }
+          })
+          .catch((err: unknown) => {
+            if (controller.signal.aborted) return;
+            const errorMessage = err instanceof Error ? err.message : "Unknown error";
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? {
+                      ...m,
+                      content: "Sorry, something went wrong.",
+                      error: errorMessage,
+                      thinkingStage: undefined,
+                    }
+                  : m,
+              ),
+            );
             setIsLoading(false);
-          }
-        });
+          });
+      } else {
+        // 标准模式
+        const apiCall = useMock ? postQueryMock : postQuery;
+
+        apiCall(req)
+          .then((resp: QueryResponse) => {
+            if (controller.signal.aborted) return;
+            const assistantMsg: ChatMessage = {
+              id: makeId(),
+              role: "assistant",
+              content: resp.answer,
+              timestamp: new Date(),
+              response: resp,
+            };
+            setMessages((prev) => [...prev, assistantMsg]);
+          })
+          .catch((err: unknown) => {
+            if (controller.signal.aborted) return;
+            const errorMessage = err instanceof Error ? err.message : "Unknown error";
+            const errMsg: ChatMessage = {
+              id: makeId(),
+              role: "assistant",
+              content: "Sorry, something went wrong.",
+              timestamp: new Date(),
+              error: errorMessage,
+            };
+            setMessages((prev) => [...prev, errMsg]);
+          })
+          .finally(() => {
+            if (!controller.signal.aborted) {
+              setIsLoading(false);
+            }
+          });
+      }
     },
-    [isLoading, includeDebug],
+    [isLoading, includeDebug, thinking],
   );
 
   const clearMessages = useCallback(() => {

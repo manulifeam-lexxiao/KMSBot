@@ -28,11 +28,15 @@ export function ActionButton({
         {isRunning ? (
           <>
             <span className="action-button__spinner" aria-hidden="true">
-              <span /><span /><span />
+              <span />
+              <span />
+              <span />
             </span>
             Running…
           </>
-        ) : label}
+        ) : (
+          label
+        )}
       </button>
       {lastError && (
         <span className="action-button__feedback action-button__feedback--error">{lastError}</span>

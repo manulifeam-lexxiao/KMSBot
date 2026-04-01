@@ -48,13 +48,27 @@
   animation: dot-bounce 1.2s infinite ease-in-out;
 }
 
-.action-button__spinner span:nth-child(1) { animation-delay: 0s; }
-.action-button__spinner span:nth-child(2) { animation-delay: 0.2s; }
-.action-button__spinner span:nth-child(3) { animation-delay: 0.4s; }
+.action-button__spinner span:nth-child(1) {
+  animation-delay: 0s;
+}
+.action-button__spinner span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.action-button__spinner span:nth-child(3) {
+  animation-delay: 0.4s;
+}
 
 @keyframes dot-bounce {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-  40%            { transform: scale(1);   opacity: 1;   }
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .action-button__feedback {

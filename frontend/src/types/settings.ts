@@ -51,3 +51,34 @@ export interface IndexStatusResponse {
   indexed_chunks: number;
   error_message: string | null;
 }
+
+/** Token usage daily breakdown */
+export interface TokenUsageDaily {
+  date: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  requests: number;
+}
+
+/** Token usage per-provider or per-mode breakdown */
+export interface TokenUsageBreakdown {
+  prompt_tokens: number;
+  completion_tokens: number;
+  requests: number;
+}
+
+/** Token usage summary from backend */
+export interface TokenUsageSummary {
+  total_prompt_tokens: number;
+  total_completion_tokens: number;
+  total_tokens: number;
+  total_requests: number;
+  daily: TokenUsageDaily[];
+  by_provider: Record<string, TokenUsageBreakdown>;
+  by_mode: Record<string, TokenUsageBreakdown>;
+}
+
+/** THINKING mode settings */
+export interface ThinkingSettings {
+  thinking_max_articles: number;
+}

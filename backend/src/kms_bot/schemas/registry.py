@@ -17,3 +17,4 @@ class DocumentRegistryRecord(StrictSchemaModel):
     last_sync_time: str | None = None
     last_index_time: str | None = None
     error_message: str | None = None
+    labels: str = "[]"

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { HealthCard } from "../../features/admin/components/HealthCard";
-import type { HealthResponse } from "../../types/admin";
+import { HealthCard } from "../../features/settings/components/HealthCard";
+import type { HealthResponse } from "../../types/settings";
 
 const healthData: HealthResponse = {
   status: "ok",
